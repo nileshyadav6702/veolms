@@ -23,15 +23,11 @@ export default function Card({
   return (
     <div
       className={[
-        'bg-white rounded-xl border border-gray-100',
-        hover ? 'hover:shadow-md transition-shadow duration-200 cursor-pointer' : '',
+        'bg-white rounded-xl',
+        hover ? 'vercel-card-shadow-hover cursor-pointer transition-shadow duration-200' : 'vercel-card-shadow',
         paddings[padding],
         className,
       ].join(' ')}
-      style={{
-        boxShadow:
-          '0px 1px 2px rgba(0,0,0,0.04), 0px 2px 8px rgba(0,0,0,0.06)',
-      }}
       {...props}
     >
       {children}

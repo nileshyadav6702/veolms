@@ -16,12 +16,10 @@ export interface Course {
 }
 
 const GRADIENTS = [
-  'from-slate-700 to-slate-900',
-  'from-teal-600 to-teal-900',
-  'from-emerald-600 to-emerald-900',
-  'from-blue-700 to-blue-900',
-  'from-violet-600 to-violet-900',
-  'from-rose-600 to-rose-900',
+  'from-develop-start to-develop-end',
+  'from-preview-start to-preview-end',
+  'from-ship-start to-ship-end',
+  'from-violet to-highlight-pink',
 ]
 
 export default function CourseCard({
@@ -37,8 +35,8 @@ export default function CourseCard({
   const originalPrice = Math.round(course.price * 3.5)
 
   return (
-    <Link href={`/courses/${course.slug}`} className="group block">
-      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5">
+    <Link href={`/courses/${course.slug}`} className="group block text-zinc-900">
+      <div className="bg-white rounded-xl vercel-card-shadow hover:-translate-y-0.5 vercel-card-shadow-hover transition-all duration-200 overflow-hidden">
         {/* Thumbnail */}
         <div
           className={`relative w-full aspect-video bg-gradient-to-br ${gradient} overflow-hidden`}
@@ -51,20 +49,20 @@ export default function CourseCard({
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <BookOpen className="w-12 h-12 text-white opacity-30" />
+              <BookOpen className="w-12 h-12 text-white opacity-35" />
             </div>
           )}
         </div>
 
         {/* Content */}
-        <div className="p-4">
-          <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 mb-1 group-hover:text-indigo-600 transition-colors leading-snug">
+        <div className="p-5">
+          <h3 className="text-sm font-semibold text-primary line-clamp-2 mb-1.5 group-hover:text-link transition-colors leading-snug">
             {course.title}
           </h3>
-          <p className="text-xs text-gray-500 mb-2.5">{course.instructor}</p>
+          <p className="text-xs text-body mb-3">{course.instructor}</p>
 
           {/* Rating */}
-          <div className="flex items-center gap-1 mb-2.5">
+          <div className="flex items-center gap-1 mb-3">
             <span className="text-xs font-bold text-amber-600">
               {rating.toFixed(1)}
             </span>
@@ -75,24 +73,24 @@ export default function CourseCard({
                   className={`w-3 h-3 ${
                     i <= Math.round(rating)
                       ? 'text-amber-400 fill-amber-400'
-                      : 'text-gray-200 fill-gray-200'
+                      : 'text-zinc-200 fill-zinc-200'
                   }`}
                 />
               ))}
             </div>
-            <span className="text-xs text-gray-400">({reviewCount})</span>
+            <span className="text-xs text-mute">({reviewCount})</span>
           </div>
 
           {/* Meta */}
-          <div className="flex items-center gap-2 mb-3">
-            <Clock className="w-3 h-3 text-gray-400" />
-            <span className="text-xs text-gray-400">{course.totalLessons} lessons</span>
+          <div className="flex items-center gap-2 mb-4">
+            <Clock className="w-3.5 h-3.5 text-zinc-400" />
+            <span className="text-xs text-zinc-500">{course.totalLessons} lessons</span>
           </div>
 
           {/* Price */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-bold text-gray-900">₹{course.price}</span>
-            <span className="text-xs text-gray-400 line-through">
+          <div className="flex items-center gap-2 border-t border-hairline pt-3 mt-1">
+            <span className="text-sm font-bold text-primary">₹{course.price}</span>
+            <span className="text-xs text-zinc-400 line-through">
               ₹{originalPrice}
             </span>
           </div>

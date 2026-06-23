@@ -4,21 +4,52 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  --color-primary: #6366f1;
-  --color-primary-dark: #4f46e5;
-  --color-primary-light: #eef2ff;
+  --color-primary: #171717;
+  --color-primary-dark: #000000;
+  --color-primary-light: #f5f5f5;
 
-  --color-ink: #111827;
-  --color-body: #374151;
-  --color-mute: #9ca3af;
+  --color-ink: #171717;
+  --color-body: #4d4d4d;
+  --color-mute: #888888;
+  
   --color-canvas: #ffffff;
-  --color-canvas-soft: #f9fafb;
-  --color-hairline: #e5e7eb;
-  --color-link: #6366f1;
+  --color-canvas-soft: #fafafa;
+  --color-canvas-soft-2: #f5f5f5;
+  
+  --color-hairline: #ebebeb;
+  --color-hairline-strong: #a1a1a1;
+  
+  --color-link: #0070f3;
+  --color-link-deep: #0761d1;
+  --color-link-bg-soft: #d3e5ff;
+  
+  --color-success: #0070f3;
+  --color-error: #ee0000;
+  --color-error-soft: #f7d4d6;
+  --color-error-deep: #c50000;
+  
+  --color-warning: #f5a623;
+  --color-warning-soft: #ffefcf;
+  --color-warning-deep: #ab570a;
+  
+  --color-violet: #7928ca;
+  --color-violet-soft: #d8ccf1;
+  --color-violet-deep: #4c2889;
+  
+  --color-cyan: #50e3c2;
+  --color-cyan-soft: #aaffec;
+  --color-cyan-deep: #29bc9b;
+  
+  --color-highlight-pink: #ff0080;
+  --color-highlight-magenta: #eb367f;
 
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-error: #ef4444;
+  /* Brand Gradients */
+  --color-develop-start: #007cf0;
+  --color-develop-end: #00dfd8;
+  --color-preview-start: #7928ca;
+  --color-preview-end: #ff0080;
+  --color-ship-start: #ff4d4d;
+  --color-ship-end: #f9cb28;
 }
 
 *,
@@ -28,8 +59,59 @@
 }
 
 body {
-  background-color: #f9fafb;
-  color: #111827;
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  background-color: var(--color-canvas-soft);
+  color: var(--color-ink);
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Vercel Atmosphere Mesh Gradient */
+.vercel-mesh-gradient {
+  background-image: 
+    radial-gradient(at 20% 20%, rgba(0, 124, 240, 0.15) 0px, transparent 50%),
+    radial-gradient(at 80% 20%, rgba(121, 40, 202, 0.15) 0px, transparent 50%),
+    radial-gradient(at 50% 80%, rgba(255, 77, 77, 0.12) 0px, transparent 50%),
+    radial-gradient(at 10% 80%, rgba(80, 227, 194, 0.1) 0px, transparent 50%),
+    radial-gradient(at 90% 80%, rgba(249, 203, 40, 0.1) 0px, transparent 50%);
+}
+
+.vercel-text-gradient-develop {
+  background: linear-gradient(90deg, #007cf0, #00dfd8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.vercel-text-gradient-preview {
+  background: linear-gradient(90deg, #7928ca, #ff0080);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.vercel-text-gradient-ship {
+  background: linear-gradient(90deg, #ff4d4d, #f9cb28);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Base custom stacked shadow */
+.vercel-card-shadow {
+  box-shadow: 
+    0px 1px 1px rgba(0, 0, 0, 0.03), 
+    0px 2px 2px rgba(0, 0, 0, 0.06),
+    inset 0px 0px 0px 1px var(--color-hairline);
+}
+
+.vercel-card-shadow-hover:hover {
+  box-shadow: 
+    0px 2px 4px rgba(0, 0, 0, 0.04), 
+    0px 8px 16px -4px rgba(0, 0, 0, 0.08),
+    inset 0px 0px 0px 1px var(--color-hairline-strong);
+}
+
+.vercel-modal-shadow {
+  box-shadow: 
+    0px 1px 1px rgba(0, 0, 0, 0.05),
+    0px 8px 16px -4px rgba(0, 0, 0, 0.1),
+    0px 24px 32px -8px rgba(0, 0, 0, 0.12),
+    inset 0px 0px 0px 1px var(--color-hairline);
 }

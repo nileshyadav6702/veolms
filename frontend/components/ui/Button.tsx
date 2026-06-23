@@ -27,11 +27,11 @@ export default function Button({
   const radius = pill ? 'rounded-full' : 'rounded-lg'
 
   const variants = {
-    primary: 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm',
-    secondary: 'bg-white text-gray-900 border border-gray-200 hover:bg-gray-50 shadow-sm',
-    outline: 'border border-indigo-600 text-indigo-600 hover:bg-indigo-50',
-    ghost: 'text-gray-600 hover:text-gray-900 hover:bg-gray-100',
-    danger: 'bg-red-600 text-white hover:bg-red-700 shadow-sm',
+    primary: 'bg-primary text-white border border-primary hover:bg-zinc-800 transition-colors shadow-sm',
+    secondary: 'bg-white text-ink border border-hairline hover:bg-canvas-soft-2 transition-colors shadow-sm',
+    outline: 'border border-primary text-primary hover:bg-canvas-soft-2 transition-colors',
+    ghost: 'text-body hover:text-ink hover:bg-canvas-soft-2 transition-colors',
+    danger: 'bg-red-600 text-white hover:bg-red-700 transition-colors shadow-sm',
   }
 
   const sizes = {
