@@ -30,13 +30,14 @@ export async function getDashboard(req: Request, res: Response): Promise<void> {
 
 export async function getStudents(req: Request, res: Response): Promise<void> {
   try {
-    const { page = '1', limit = '20' } = req.query as Record<string, string>;
-    const skip = (Number(page) - 1) * Number(limit);
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
+    const skip = (page - 1) * limit;
     const [students, total] = await Promise.all([
-      User.find({ role: 'student' }).select('-passwordHash').skip(skip).limit(Number(limit)).sort({ createdAt: -1 }),
+      User.find({ role: 'student' }).select('-passwordHash').skip(skip).limit(limit).sort({ createdAt: -1 }),
       User.countDocuments({ role: 'student' }),
     ]);
-    res.json({ success: true, students, total, page: Number(page), totalPages: Math.ceil(total / Number(limit)) });
+    res.json({ success: true, students, total, page, totalPages: Math.ceil(total / limit) });
   } catch {
     res.status(500).json({ success: false, message: 'Server error' });
   }
@@ -44,18 +45,19 @@ export async function getStudents(req: Request, res: Response): Promise<void> {
 
 export async function getAllEnrollments(req: Request, res: Response): Promise<void> {
   try {
-    const { page = '1', limit = '20' } = req.query as Record<string, string>;
-    const skip = (Number(page) - 1) * Number(limit);
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
+    const skip = (page - 1) * limit;
     const [enrollments, total] = await Promise.all([
       Enrollment.find({ paymentStatus: 'paid' })
         .populate('userId', 'name email')
         .populate('courseId', 'title price')
         .skip(skip)
-        .limit(Number(limit))
+        .limit(limit)
         .sort({ enrolledAt: -1 }),
       Enrollment.countDocuments({ paymentStatus: 'paid' }),
     ]);
-    res.json({ success: true, enrollments, total, page: Number(page), totalPages: Math.ceil(total / Number(limit)) });
+    res.json({ success: true, enrollments, total, page, totalPages: Math.ceil(total / limit) });
   } catch {
     res.status(500).json({ success: false, message: 'Server error' });
   }

@@ -101,17 +101,16 @@ export async function verifyPayment(req: Request, res: Response): Promise<void> 
 export async function razorpayWebhook(req: Request, res: Response): Promise<void> {
   try {
     const signature = req.headers['x-razorpay-signature'] as string;
-    const rawBody = JSON.stringify(req.body);
+    const rawBody = req.body instanceof Buffer ? req.body.toString('utf8') : JSON.stringify(req.body);
+    const event = JSON.parse(rawBody) as {
+      event: string;
+      payload: { payment: { entity: { order_id: string; id: string } } };
+    };
 
     if (!verifyWebhookSignature(rawBody, signature)) {
       res.status(400).json({ success: false, message: 'Invalid webhook signature' });
       return;
     }
-
-    const event = req.body as {
-      event: string;
-      payload: { payment: { entity: { order_id: string; id: string } } };
-    };
     if (event.event === 'payment.captured') {
       const orderId = event.payload.payment.entity.order_id;
       const paymentId = event.payload.payment.entity.id;

@@ -72,6 +72,11 @@ export async function getLessonStreamUrl(req: Request, res: Response): Promise<v
       }
     }
 
+    if (lesson.status !== 'ready') {
+      res.status(422).json({ success: false, message: 'Video is still processing. Try again later.' });
+      return;
+    }
+
     const key = lesson.hlsKey || lesson.videoKey;
     // Short-lived URL: 2 hours for video streaming
     const url = await getPresignedGetUrl(key, 7200);

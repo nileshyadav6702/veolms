@@ -17,15 +17,17 @@ const courseSchema = z.object({
 
 export async function listCourses(req: Request, res: Response): Promise<void> {
   try {
-    const { search, page = '1', limit = '12' } = req.query as Record<string, string>;
+    const { search } = req.query as Record<string, string>;
     const query: Record<string, unknown> = { isPublished: true };
     if (search) query.title = { $regex: search, $options: 'i' };
-    const skip = (Number(page) - 1) * Number(limit);
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 12));
+    const skip = (page - 1) * limit;
     const [courses, total] = await Promise.all([
-      Course.find(query).select('-createdBy').skip(skip).limit(Number(limit)).sort({ createdAt: -1 }),
+      Course.find(query).select('-createdBy').skip(skip).limit(limit).sort({ createdAt: -1 }),
       Course.countDocuments(query),
     ]);
-    res.json({ success: true, courses, total, page: Number(page), totalPages: Math.ceil(total / Number(limit)) });
+    res.json({ success: true, courses, total, page, totalPages: Math.ceil(total / limit) });
   } catch {
     res.status(500).json({ success: false, message: 'Server error' });
   }

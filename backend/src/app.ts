@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
@@ -16,6 +16,10 @@ export const app = express();
 
 app.use(helmet());
 app.use(cors({ origin: config.FRONTEND_URL, credentials: true }));
+
+// Capture raw body for Razorpay webhook signature verification
+app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
+
 app.use(express.json({ limit: '10mb' }));
 
 const globalLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 500 });
@@ -35,3 +39,12 @@ app.use('/api/progress', progressRoutes);
 app.use('/api/admin', adminRoutes);
 
 app.use((_req, res) => res.status(404).json({ success: false, message: 'Route not found' }));
+
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+  if ((err as unknown as Record<string, unknown>).type === 'entity.parse.failed') {
+    res.status(400).json({ success: false, message: 'Invalid JSON body' });
+    return;
+  }
+  console.error(err);
+  res.status(500).json({ success: false, message: 'Internal server error' });
+});
