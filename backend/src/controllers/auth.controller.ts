@@ -68,6 +68,11 @@ export async function login(req: Request, res: Response): Promise<void> {
   }
 }
 
+export async function logout(_req: Request, res: Response): Promise<void> {
+  // JWT is stateless — client must delete the token. This endpoint signals success.
+  res.json({ success: true, message: 'Logged out successfully' });
+}
+
 export async function me(req: Request, res: Response): Promise<void> {
   try {
     const user = await User.findById(req.user!.id).select('-passwordHash');

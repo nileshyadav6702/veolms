@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import slugify from 'slugify';
 import { z } from 'zod';
+import { Types } from 'mongoose';
 import { Course } from '../models/Course';
 import { Lesson } from '../models/Lesson';
 
@@ -107,6 +108,88 @@ export async function publishCourse(req: Request, res: Response): Promise<void> 
       return;
     }
     res.json({ success: true, course });
+  } catch {
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+}
+
+const sectionSchema = z.object({
+  title: z.string().min(1).max(200),
+  order: z.number().min(0),
+});
+
+export async function addSection(req: Request, res: Response): Promise<void> {
+  try {
+    const { title, order } = sectionSchema.parse(req.body);
+    const course = await Course.findById(req.params.id);
+    if (!course) {
+      res.status(404).json({ success: false, message: 'Course not found' });
+      return;
+    }
+    const section = { _id: new Types.ObjectId(), title, order };
+    course.sections.push(section);
+    course.sections.sort((a, b) => a.order - b.order);
+    await course.save();
+    res.status(201).json({ success: true, section, course });
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      res.status(400).json({ success: false, message: 'Validation error', errors: err.flatten().fieldErrors });
+      return;
+    }
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+}
+
+export async function updateSection(req: Request, res: Response): Promise<void> {
+  try {
+    const { title, order } = sectionSchema.partial().parse(req.body);
+    const course = await Course.findById(req.params.id);
+    if (!course) {
+      res.status(404).json({ success: false, message: 'Course not found' });
+      return;
+    }
+    const section = course.sections.find(
+      (s) => s._id.toString() === req.params.sectionId
+    );
+    if (!section) {
+      res.status(404).json({ success: false, message: 'Section not found' });
+      return;
+    }
+    if (title !== undefined) section.title = title;
+    if (order !== undefined) section.order = order;
+    course.sections.sort((a, b) => a.order - b.order);
+    await course.save();
+    res.json({ success: true, section, course });
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      res.status(400).json({ success: false, message: 'Validation error', errors: err.flatten().fieldErrors });
+      return;
+    }
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+}
+
+export async function deleteSection(req: Request, res: Response): Promise<void> {
+  try {
+    const course = await Course.findById(req.params.id);
+    if (!course) {
+      res.status(404).json({ success: false, message: 'Course not found' });
+      return;
+    }
+    const sectionIndex = course.sections.findIndex(
+      (s) => s._id.toString() === req.params.sectionId
+    );
+    if (sectionIndex === -1) {
+      res.status(404).json({ success: false, message: 'Section not found' });
+      return;
+    }
+    const sectionId = course.sections[sectionIndex]._id;
+    // Delete all lessons in this section and get the count
+    const { deletedCount } = await Lesson.deleteMany({ courseId: course._id, sectionId });
+    course.sections.splice(sectionIndex, 1);
+    course.totalLessons = Math.max(0, course.totalLessons - (deletedCount ?? 0));
+    await course.save();
+    res.json({ success: true, message: 'Section and its lessons deleted', deletedLessons: deletedCount });
   } catch {
     res.status(500).json({ success: false, message: 'Server error' });
   }
