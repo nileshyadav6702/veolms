@@ -9,6 +9,7 @@ import lessonRoutes from './routes/lesson.routes';
 import uploadRoutes from './routes/upload.routes';
 import paymentRoutes from './routes/payment.routes';
 import enrollmentRoutes from './routes/enrollment.routes';
+import progressRoutes from './routes/progress.routes';
 
 export const app = express();
 
@@ -29,5 +30,6 @@ app.use('/api/lessons', lessonRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/enrollments', enrollmentRoutes);
+app.use('/api/progress', progressRoutes);
 
 app.use((_req, res) => res.status(404).json({ success: false, message: 'Route not found' }));
