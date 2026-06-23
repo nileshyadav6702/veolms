@@ -116,4 +116,61 @@ describe('Payment Routes', () => {
       expect(res.body.enrolled).toBe(false);
     });
   });
+
+  describe('POST /api/payments/verify', () => {
+    it('verifies payment and marks enrollment as paid', async () => {
+      // 1. Create user + course
+      const user = await User.create({ name: 'S', email: 'sv@sv.com', passwordHash: await bcrypt.hash('pass', 12), role: 'student' });
+      const token = signToken({ id: user._id.toString(), email: user.email, role: user.role });
+      const admin = await User.create({ name: 'A', email: 'av@av.com', passwordHash: 'x', role: 'admin' });
+      const course = await Course.create({ title: 'JS', slug: 'js-v', thumbnail: 'https://x.com/t.jpg', description: 'desc', shortDescription: 'JS', instructor: 'I', price: 999, isPublished: true, createdBy: admin._id });
+      // 2. Create pending enrollment
+      await request(app)
+        .post('/api/payments/create-order')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ courseId: course._id.toString() });
+      const { Enrollment } = await import('../src/models/Enrollment');
+      const enrollment = await Enrollment.findOne({ userId: user._id });
+      // 3. Verify payment
+      const res = await request(app)
+        .post('/api/payments/verify')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          razorpayOrderId: enrollment!.razorpayOrderId,
+          razorpayPaymentId: 'pay_test123',
+          razorpaySignature: 'sig_test',
+          courseId: course._id.toString(),
+        });
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.enrollment.paymentStatus).toBe('paid');
+    });
+
+    it('returns 401 without token', async () => {
+      const res = await request(app).post('/api/payments/verify').send({});
+      expect(res.status).toBe(401);
+    });
+  });
+
+  describe('POST /api/payments/webhook', () => {
+    it('processes payment.captured event and marks enrollment paid', async () => {
+      // Create an enrollment in pending state
+      const user = await User.create({ name: 'W', email: 'wh@wh.com', passwordHash: 'x', role: 'student' });
+      const admin = await User.create({ name: 'AW', email: 'aw@aw.com', passwordHash: 'x', role: 'admin' });
+      const course = await Course.create({ title: 'WH', slug: 'wh-test', thumbnail: 'https://x.com/t.jpg', description: 'desc', shortDescription: 'WH', instructor: 'I', price: 999, isPublished: true, createdBy: admin._id });
+      const { Enrollment } = await import('../src/models/Enrollment');
+      await Enrollment.create({ userId: user._id, courseId: course._id, razorpayOrderId: 'order_wh123', paymentStatus: 'pending' });
+
+      const res = await request(app)
+        .post('/api/payments/webhook')
+        .set('x-razorpay-signature', 'test_sig')
+        .send({
+          event: 'payment.captured',
+          payload: { payment: { entity: { order_id: 'order_wh123', id: 'pay_wh456' } } },
+        });
+      expect(res.status).toBe(200);
+      const updated = await Enrollment.findOne({ razorpayOrderId: 'order_wh123' });
+      expect(updated!.paymentStatus).toBe('paid');
+    });
+  });
 });
