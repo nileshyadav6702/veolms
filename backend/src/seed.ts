@@ -2,6 +2,7 @@ import { connectDB, disconnectDB } from './config/db';
 import { User } from './models/User';
 import { Course } from './models/Course';
 import { Lesson } from './models/Lesson';
+import { Types } from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 async function seed() {
@@ -25,7 +26,7 @@ async function seed() {
     role: 'student',
   });
 
-  const sectionId = new (require('mongoose').Types.ObjectId)();
+  const sectionId = new Types.ObjectId();
 
   const course = await Course.create({
     title: 'JavaScript Fundamentals',
