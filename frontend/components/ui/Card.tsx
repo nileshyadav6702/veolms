@@ -1,7 +1,7 @@
 import { HTMLAttributes, ReactNode } from 'react'
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
-  children: ReactNode
+  children?: ReactNode
   padding?: 'none' | 'sm' | 'md' | 'lg'
   hover?: boolean
 }

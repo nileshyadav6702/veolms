@@ -36,7 +36,10 @@ export async function listCourses(req: Request, res: Response): Promise<void> {
 
 export async function getCourse(req: Request, res: Response): Promise<void> {
   try {
-    const course = await Course.findOne({ slug: req.params.slug, isPublished: true });
+    const query = Types.ObjectId.isValid(req.params.slug)
+      ? { _id: req.params.slug, isPublished: true }
+      : { slug: req.params.slug, isPublished: true };
+    const course = await Course.findOne(query);
     if (!course) {
       res.status(404).json({ success: false, message: 'Course not found' });
       return;
