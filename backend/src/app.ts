@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { config } from './config/env';
 import authRoutes from './routes/auth.routes';
+import courseRoutes from './routes/course.routes';
 
 export const app = express();
 
@@ -19,5 +20,6 @@ app.use(globalLimiter);
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
 app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/courses', courseRoutes);
 
 app.use((_req, res) => res.status(404).json({ success: false, message: 'Route not found' }));
