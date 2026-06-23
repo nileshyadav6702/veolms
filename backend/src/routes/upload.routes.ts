@@ -1,11 +1,12 @@
 import { Router } from 'express';
-import { getThumbnailUploadUrl, getVideoUploadUrl, triggerTranscode, updateLessonVideoKey, deleteFile, getFile } from '../controllers/upload.controller';
+import { getThumbnailUploadUrl, getVideoUploadUrl, triggerTranscode, updateLessonVideoKey, deleteFile, getFile, getImage } from '../controllers/upload.controller';
 import { authenticate } from '../middleware/authenticate';
 import { authorize } from '../middleware/authorize';
 
 const router = Router();
 
 router.get('/file', getFile);
+router.get('/image', getImage);
 router.post('/thumbnail', authenticate, authorize('admin'), getThumbnailUploadUrl);
 router.post('/video', authenticate, authorize('admin'), getVideoUploadUrl);
 router.post('/delete-file', authenticate, authorize('admin'), deleteFile);

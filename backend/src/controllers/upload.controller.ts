@@ -121,6 +121,7 @@ export async function deleteFile(req: Request, res: Response): Promise<void> {
   }
 }
 
+// Returns JSON { url } — used by the frontend for video src resolution (supports range requests)
 export async function getFile(req: Request, res: Response): Promise<void> {
   try {
     const { key } = req.query;
@@ -130,6 +131,21 @@ export async function getFile(req: Request, res: Response): Promise<void> {
     }
     const url = await getPresignedGetUrl(key, 3600);
     res.json({ success: true, url });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+}
+
+// Redirects to presigned URL — used as <img src> for thumbnails (no range requests needed)
+export async function getImage(req: Request, res: Response): Promise<void> {
+  try {
+    const { key } = req.query;
+    if (!key || typeof key !== 'string') {
+      res.status(400).json({ success: false, message: 'Key is required' });
+      return;
+    }
+    const url = await getPresignedGetUrl(key, 3600);
+    res.redirect(url);
   } catch (err) {
     res.status(500).json({ success: false, message: 'Server error' });
   }

@@ -45,14 +45,15 @@ export function extractR2Key(urlStr: string): string | null {
 
 export function formatThumbnailUrl(thumbnail: string, req: Request): string {
   if (!thumbnail) return '';
+  // Migrate old /api/upload/file thumbnail URLs to /api/upload/image
   if (thumbnail.includes('/api/upload/file')) {
-    return thumbnail;
+    return thumbnail.replace('/api/upload/file', '/api/upload/image');
   }
   if (thumbnail.includes('r2.cloudflarestorage.com') || thumbnail.startsWith('thumbnails/')) {
     const key = extractR2Key(thumbnail);
     if (key) {
       const host = req.protocol + '://' + req.get('host');
-      return `${host}/api/upload/file?key=${key}`;
+      return `${host}/api/upload/image?key=${encodeURIComponent(key)}`;
     }
   }
   return thumbnail;
