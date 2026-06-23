@@ -15,7 +15,24 @@ import adminRoutes from './routes/admin.routes';
 export const app = express();
 
 app.use(helmet());
-app.use(cors({ origin: config.FRONTEND_URL, credentials: true }));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true)
+      if (
+        config.NODE_ENV === 'development' &&
+        (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:'))
+      ) {
+        return callback(null, true)
+      }
+      if (origin === config.FRONTEND_URL) {
+        return callback(null, true)
+      }
+      return callback(new Error('Not allowed by CORS'))
+    },
+    credentials: true,
+  })
+)
 
 // Capture raw body for Razorpay webhook signature verification
 app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
