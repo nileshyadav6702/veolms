@@ -29,19 +29,19 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="sticky top-0 z-50 bg-white border-b border-gray-100">
+    <nav className="sticky top-0 z-50 bg-white border-b border-hairline">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 shrink-0">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-sm">
+          <Link href="/" className="flex items-center gap-2.5 shrink-0">
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-sm">
               <BookOpen className="w-4 h-4 text-white" />
             </div>
-            <span className="text-lg font-bold text-gray-900">VeoLMS</span>
+            <span className="text-base font-bold tracking-tight text-primary">VeoLMS</span>
           </Link>
 
           {/* Desktop nav links */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden md:flex items-center gap-1.5">
             <NavLink href="/courses" active={pathname.startsWith('/courses')}>
               Courses
             </NavLink>
@@ -63,20 +63,20 @@ export default function Navbar() {
               <div className="relative">
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-canvas-soft-2 transition-colors border border-transparent hover:border-hairline"
                 >
-                  <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
-                    <span className="text-xs font-bold text-indigo-700">
+                  <div className="w-7 h-7 bg-canvas-soft-2 border border-hairline rounded-full flex items-center justify-center shrink-0">
+                    <span className="text-xs font-bold text-primary">
                       {user.name.slice(0, 2).toUpperCase()}
                     </span>
                   </div>
-                  <div className="text-left">
-                    <p className="text-sm font-medium text-gray-900 leading-none">
+                  <div className="text-left hidden lg:block">
+                    <p className="text-xs font-semibold text-primary leading-none">
                       {user.name.split(' ')[0]}
                     </p>
-                    <p className="text-xs text-gray-500 capitalize">{user.role}</p>
+                    <p className="text-[10px] text-mute capitalize mt-0.5">{user.role}</p>
                   </div>
-                  <ChevronDown className="w-4 h-4 text-gray-400" />
+                  <ChevronDown className="w-3.5 h-3.5 text-mute" />
                 </button>
 
                 {userMenuOpen && (
@@ -85,18 +85,18 @@ export default function Navbar() {
                       className="fixed inset-0 z-10"
                       onClick={() => setUserMenuOpen(false)}
                     />
-                    <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl border border-gray-100 shadow-lg z-20 overflow-hidden">
-                      <div className="px-4 py-3 border-b border-gray-50">
-                        <p className="text-sm font-medium text-gray-900">{user.name}</p>
-                        <p className="text-xs text-gray-500">{user.email}</p>
+                    <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl border border-hairline vercel-modal-shadow z-20 overflow-hidden">
+                      <div className="px-4 py-3 border-b border-hairline bg-canvas-soft">
+                        <p className="text-xs font-bold text-primary">{user.name}</p>
+                        <p className="text-[11px] text-mute truncate">{user.email}</p>
                       </div>
                       {user.role === 'student' && (
                         <Link
                           href="/dashboard"
                           onClick={() => setUserMenuOpen(false)}
-                          className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
+                          className="flex items-center gap-2 px-4 py-2.5 text-xs font-medium text-body hover:text-primary hover:bg-canvas-soft-2 transition-colors"
                         >
-                          <LayoutDashboard className="w-4 h-4 text-gray-400" />
+                          <LayoutDashboard className="w-3.5 h-3.5 text-mute" />
                           Dashboard
                         </Link>
                       )}
@@ -104,17 +104,17 @@ export default function Navbar() {
                         <Link
                           href="/admin"
                           onClick={() => setUserMenuOpen(false)}
-                          className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
+                          className="flex items-center gap-2 px-4 py-2.5 text-xs font-medium text-body hover:text-primary hover:bg-canvas-soft-2 transition-colors"
                         >
-                          <Shield className="w-4 h-4 text-gray-400" />
+                          <Shield className="w-3.5 h-3.5 text-mute" />
                           Admin Panel
                         </Link>
                       )}
                       <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50"
+                        className="w-full flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-50 border-t border-hairline"
                       >
-                        <LogOut className="w-4 h-4" />
+                        <LogOut className="w-3.5 h-3.5" />
                         Log out
                       </button>
                     </div>
@@ -129,7 +129,7 @@ export default function Navbar() {
                   </Button>
                 </Link>
                 <Link href="/signup">
-                  <Button variant="primary" size="sm" pill>
+                  <Button variant="primary" size="sm">
                     Sign up
                   </Button>
                 </Link>
@@ -139,7 +139,7 @@ export default function Navbar() {
 
           {/* Mobile hamburger */}
           <button
-            className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100"
+            className="md:hidden p-2 rounded-lg text-body hover:text-ink hover:bg-canvas-soft-2"
             onClick={() => setMenuOpen(!menuOpen)}
           >
             {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -149,7 +149,7 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div className="md:hidden border-t border-gray-100 bg-white px-4 py-3 space-y-1">
+        <div className="md:hidden border-t border-hairline bg-white px-4 py-3 space-y-1">
           <MobileLink href="/courses" onClick={() => setMenuOpen(false)}>
             Courses
           </MobileLink>
@@ -166,19 +166,19 @@ export default function Navbar() {
           {user ? (
             <button
               onClick={handleLogout}
-              className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg"
+              className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg font-medium border-t border-hairline pt-3 mt-2"
             >
               Log out
             </button>
           ) : (
-            <div className="flex gap-2 pt-2">
+            <div className="flex gap-2 pt-2 border-t border-hairline mt-2">
               <Link href="/login" className="flex-1" onClick={() => setMenuOpen(false)}>
-                <Button variant="secondary" size="sm" className="w-full">
+                <Button variant="secondary" size="sm" className="w-full justify-center">
                   Log in
                 </Button>
               </Link>
               <Link href="/signup" className="flex-1" onClick={() => setMenuOpen(false)}>
-                <Button variant="primary" size="sm" pill className="w-full">
+                <Button variant="primary" size="sm" className="w-full justify-center">
                   Sign up
                 </Button>
               </Link>
@@ -202,10 +202,10 @@ function NavLink({
   return (
     <Link
       href={href}
-      className={`px-3 py-2 text-sm rounded-lg transition-colors ${
+      className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
         active
-          ? 'text-indigo-600 font-medium bg-indigo-50'
-          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+          ? 'text-primary font-semibold bg-canvas-soft-2'
+          : 'text-body hover:text-ink hover:bg-canvas-soft-2'
       }`}
     >
       {children}
@@ -226,7 +226,7 @@ function MobileLink({
     <Link
       href={href}
       onClick={onClick}
-      className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"
+      className="block px-3 py-2 text-sm text-body hover:text-ink hover:bg-canvas-soft-2 rounded-lg font-medium"
     >
       {children}
     </Link>
