@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { Lesson } from '../models/Lesson';
 import { Course } from '../models/Course';
 import { Enrollment } from '../models/Enrollment';
-import { getPresignedGetUrl } from '../services/r2.service';
+import { getPresignedGetUrl, deleteObject } from '../services/r2.service';
 
 const lessonSchema = z.object({
   courseId: z.string().min(1),
@@ -15,6 +15,7 @@ const lessonSchema = z.object({
   duration: z.number().min(0).default(0),
   order: z.number().min(0),
   isPreview: z.boolean().default(false),
+  status: z.enum(['processing', 'ready', 'error']).optional(),
 });
 
 export async function getLessonsForCourse(req: Request, res: Response): Promise<void> {
@@ -110,11 +111,31 @@ export async function createLesson(req: Request, res: Response): Promise<void> {
 export async function updateLesson(req: Request, res: Response): Promise<void> {
   try {
     const data = lessonSchema.partial().parse(req.body);
-    const lesson = await Lesson.findByIdAndUpdate(req.params.id, data, { new: true, runValidators: true });
-    if (!lesson) {
+    const oldLesson = await Lesson.findById(req.params.id);
+    if (!oldLesson) {
       res.status(404).json({ success: false, message: 'Lesson not found' });
       return;
     }
+
+    // If new videoKey is supplied and differs from the old one, clean up R2 objects
+    if (data.videoKey && data.videoKey !== oldLesson.videoKey) {
+      if (oldLesson.videoKey && oldLesson.videoKey !== 'videos/raw/temp-video.mp4') {
+        try {
+          await deleteObject(oldLesson.videoKey);
+        } catch (err) {
+          console.error('Failed to delete old videoKey from R2:', err);
+        }
+      }
+      if (oldLesson.hlsKey) {
+        try {
+          await deleteObject(oldLesson.hlsKey);
+        } catch (err) {
+          console.error('Failed to delete old hlsKey from R2:', err);
+        }
+      }
+    }
+
+    const lesson = await Lesson.findByIdAndUpdate(req.params.id, data, { new: true, runValidators: true });
     res.json({ success: true, lesson });
   } catch (err) {
     if (err instanceof z.ZodError) {
@@ -127,11 +148,29 @@ export async function updateLesson(req: Request, res: Response): Promise<void> {
 
 export async function deleteLesson(req: Request, res: Response): Promise<void> {
   try {
-    const lesson = await Lesson.findByIdAndDelete(req.params.id);
+    const lesson = await Lesson.findById(req.params.id);
     if (!lesson) {
       res.status(404).json({ success: false, message: 'Lesson not found' });
       return;
     }
+
+    // Clean up R2 video file
+    if (lesson.videoKey && lesson.videoKey !== 'videos/raw/temp-video.mp4') {
+      try {
+        await deleteObject(lesson.videoKey);
+      } catch (err) {
+        console.error('Failed to delete videoKey from R2:', err);
+      }
+    }
+    if (lesson.hlsKey) {
+      try {
+        await deleteObject(lesson.hlsKey);
+      } catch (err) {
+        console.error('Failed to delete hlsKey from R2:', err);
+      }
+    }
+
+    await Lesson.findByIdAndDelete(req.params.id);
     await Course.findByIdAndUpdate(lesson.courseId, { $inc: { totalLessons: -1 } });
     res.json({ success: true, message: 'Lesson deleted' });
   } catch {

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { z } from 'zod';
 import { Progress } from '../models/Progress';
 import { Enrollment } from '../models/Enrollment';
+import { formatThumbnailUrl } from './course.controller';
 
 const updateProgressSchema = z.object({
   lessonId: z.string().min(1),
@@ -58,7 +59,16 @@ export async function getRecentProgress(req: Request, res: Response): Promise<vo
       .limit(5)
       .populate('lessonId', 'title duration courseId')
       .populate('courseId', 'title slug thumbnail');
-    res.json({ success: true, recent });
+    
+    const formattedRecent = recent.map((item) => {
+      const doc = item.toObject();
+      if (doc.courseId && typeof doc.courseId === 'object' && (doc.courseId as any).thumbnail) {
+        (doc.courseId as any).thumbnail = formatThumbnailUrl((doc.courseId as any).thumbnail, req);
+      }
+      return doc;
+    });
+    
+    res.json({ success: true, recent: formattedRecent });
   } catch {
     res.status(500).json({ success: false, message: 'Server error' });
   }

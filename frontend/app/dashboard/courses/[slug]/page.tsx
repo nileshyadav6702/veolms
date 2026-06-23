@@ -13,9 +13,8 @@ import {
   Play,
   X,
   Sparkles,
+  DollarSign,
 } from 'lucide-react'
-import Navbar from '@/components/layout/Navbar'
-import Footer from '@/components/layout/Footer'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 import Card from '@/components/ui/Card'
@@ -41,7 +40,7 @@ interface CourseDetail {
   totalDuration: number
 }
 
-export default function CourseDetailPage() {
+export default function DashboardCourseDetailPage() {
   const params = useParams()
   const slug = params.slug as string
   const router = useRouter()
@@ -49,10 +48,10 @@ export default function CourseDetailPage() {
 
   const [course, setCourse] = useState<CourseDetail | null>(null)
   const [lessons, setLessons] = useState<Lesson[]>([])
-  const [enrollLoading, setEnrollLoading] = useState(false)
   const [isEnrolled, setIsEnrolled] = useState(false)
   const [enrollmentDetails, setEnrollmentDetails] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [enrollLoading, setEnrollLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'overview' | 'curriculum'>('overview')
 
@@ -92,7 +91,7 @@ export default function CourseDetailPage() {
 
   const handleEnroll = async () => {
     if (!user) {
-      router.push(`/login?redirect=/courses/${slug}`)
+      router.push(`/login?redirect=/dashboard/courses/${slug}`)
       return
     }
 
@@ -194,7 +193,7 @@ export default function CourseDetailPage() {
 
   const handlePreviewPlay = async (lesson: Lesson) => {
     if (!user) {
-      router.push(`/login?redirect=/courses/${slug}`)
+      router.push(`/login?redirect=/dashboard/courses/${slug}`)
       return
     }
 
@@ -224,198 +223,90 @@ export default function CourseDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-gray-50">
-        <Navbar />
-        <div className="flex-1 flex items-center justify-center py-20">
-          <Spinner className="w-8 h-8" />
-        </div>
-        <Footer />
+      <div className="flex-1 flex items-center justify-center py-20 w-full">
+        <Spinner className="w-8 h-8" />
       </div>
     )
   }
 
   if (error || !course) {
     return (
-      <div className="min-h-screen flex flex-col bg-gray-50">
-        <Navbar />
-        <div className="max-w-md mx-auto my-20 p-6 bg-white rounded-xl border border-gray-100 shadow-sm text-center">
-          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Error</h2>
-          <p className="text-gray-500 text-sm mb-6">{error || 'Course not found.'}</p>
-          <Button onClick={() => router.push('/courses')} variant="secondary" size="sm">
-            Back to Courses
-          </Button>
-        </div>
-        <Footer />
+      <div className="max-w-md mx-auto my-20 p-6 bg-white rounded-xl border border-gray-100 shadow-sm text-center">
+        <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+        <h2 className="text-xl font-bold text-gray-900 mb-2">Error</h2>
+        <p className="text-gray-500 text-sm mb-6">{error || 'Course not found.'}</p>
+        <Button onClick={() => router.push('/dashboard/courses')} variant="secondary" size="sm">
+          Back to Courses
+        </Button>
       </div>
     )
   }
 
-  // Calculate stats
   const totalDurationMin = Math.round(course.totalDuration / 60)
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <Navbar />
+    <div className="max-w-7xl mx-auto px-6 sm:px-8 py-8 flex-1 w-full space-y-6">
       <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
 
-      {/* Hero Header */}
-      <section className="bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
-          <button
-            onClick={() => router.push('/courses')}
-            className="flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700 transition-colors uppercase tracking-wider mb-6 font-mono"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" /> Back to courses
-          </button>
+      {/* Back navigation button */}
+      <div>
+        <button
+          onClick={() => router.push('/dashboard/courses')}
+          className="flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-700 transition-colors uppercase tracking-wider font-mono mb-2"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" /> Back to library
+        </button>
+      </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-start">
-            {/* Title / Description */}
-            <div className="lg:col-span-2">
-              <div className="flex items-center gap-2.5 mb-4">
-                <Badge variant="purple">Programming</Badge>
-                {isEnrolled && (
-                  <Badge variant="success" className="flex items-center gap-1">
-                    <CheckCircle className="w-3 h-3" /> Enrolled
-                  </Badge>
-                )}
-              </div>
-
-              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4 tracking-tight">
-                {course.title}
-              </h1>
-
-              <p className="text-base sm:text-lg text-gray-500 mb-6 leading-relaxed">
-                {course.shortDescription}
-              </p>
-
-              {/* Metadata */}
-              <div className="flex flex-wrap items-center gap-6 text-sm text-gray-500 font-medium">
-                <div className="flex items-center gap-2">
-                  <User className="w-4 h-4 text-gray-400" />
-                  <span>Created by <span className="text-gray-900">{course.instructor}</span></span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <BookOpen className="w-4 h-4 text-gray-400" />
-                  <span>{course.totalLessons} lessons</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-gray-400" />
-                  <span>{totalDurationMin} mins total</span>
-                </div>
-                <div className="flex items-center gap-1 text-amber-600 font-semibold">
-                  <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
-                  <span>4.8 rating</span>
-                </div>
-              </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        {/* Core Description Panel */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-white border border-hairline rounded-2xl p-6 sm:p-8 shadow-sm space-y-4">
+            <div className="flex items-center gap-2.5">
+              <Badge variant="purple">Programming</Badge>
+              {isEnrolled && (
+                <Badge variant="success" className="flex items-center gap-1">
+                  <CheckCircle className="w-3 h-3" /> Enrolled
+                </Badge>
+              )}
             </div>
 
-            {/* Price Card (Desktop: sticky, Mobile: stack) */}
-            <div className="lg:col-span-1">
-              <Card className="sticky top-20 overflow-hidden" padding="none">
-                <div className="aspect-video relative bg-slate-900 flex items-center justify-center">
-                  {course.thumbnail ? (
-                    <img
-                      src={course.thumbnail}
-                      alt={course.title}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <BookOpen className="w-12 h-12 text-white/30" />
-                  )}
-                  {lessons.some((l) => l.isPreview) && (
-                    <button
-                      onClick={() => {
-                        const preview = lessons.find((l) => l.isPreview)
-                        if (preview) handlePreviewPlay(preview)
-                      }}
-                      className="absolute inset-0 bg-black/40 flex items-center justify-center group hover:bg-black/50 transition-colors"
-                    >
-                      <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-                        <Play className="w-5 h-5 text-indigo-600 fill-indigo-600 ml-0.5" />
-                      </div>
-                    </button>
-                  )}
-                </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight leading-tight">
+              {course.title}
+            </h1>
 
-                <div className="p-6">
-                  <div className="flex items-baseline gap-2 mb-4">
-                    <span className="text-3xl font-extrabold text-gray-900">
-                      ₹{course.price}
-                    </span>
-                    <span className="text-sm text-gray-400 line-through">
-                      ₹{Math.round(course.price * 3.5)}
-                    </span>
-                  </div>
+            <p className="text-sm text-gray-500 leading-relaxed">
+              {course.shortDescription}
+            </p>
 
-                  {isEnrolled ? (
-                    <>
-                      <Button
-                        onClick={() => {
-                          if (lessons.length > 0) {
-                            router.push(`/learn/${course._id}/${lessons[0]._id}`)
-                          }
-                        }}
-                        className="w-full justify-center"
-                      >
-                        Resume Learning
-                      </Button>
-                      
-                      <div className="mt-4 pt-4 border-t border-hairline bg-canvas-soft p-3 rounded-lg text-left text-xs space-y-1.5 font-medium text-zinc-700">
-                        <p className="font-mono text-[9px] text-mute uppercase font-bold tracking-wider mb-1">Receipt details</p>
-                        <div className="flex justify-between">
-                          <span className="text-mute">Status</span>
-                          <span className="text-emerald-600 font-bold uppercase text-[10px]">Paid</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-mute">Price Paid</span>
-                          <span className="font-semibold text-primary">₹{course.price}</span>
-                        </div>
-                        {enrollmentDetails?.razorpayPaymentId && (
-                          <div className="flex justify-between">
-                            <span className="text-mute">Payment Ref</span>
-                            <span className="font-mono text-[10px] text-primary truncate max-w-[130px]">{enrollmentDetails.razorpayPaymentId}</span>
-                          </div>
-                        )}
-                        {enrollmentDetails?.enrolledAt && (
-                          <div className="flex justify-between">
-                            <span className="text-mute">Purchase Date</span>
-                            <span className="text-primary">{new Date(enrollmentDetails.enrolledAt).toLocaleDateString()}</span>
-                          </div>
-                        )}
-                      </div>
-                    </>
-                  ) : (
-                    <Button
-                      onClick={handleEnroll}
-                      loading={enrollLoading}
-                      className="w-full justify-center"
-                    >
-                      {user ? 'Enroll Now' : 'Log in to Enroll'}
-                    </Button>
-                  )}
-
-                  <p className="text-[11px] text-gray-400 text-center mt-3 leading-relaxed">
-                    100% money-back guarantee · Lifetime access to content
-                  </p>
-                </div>
-              </Card>
+            <div className="flex flex-wrap items-center gap-5 pt-2 text-xs text-gray-500 font-semibold border-t border-zinc-100">
+              <div className="flex items-center gap-2">
+                <User className="w-4 h-4 text-zinc-400" />
+                <span>Instructor: <span className="text-gray-900">{course.instructor}</span></span>
+              </div>
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-zinc-400" />
+                <span>{course.totalLessons} lessons</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-zinc-400" />
+                <span>{totalDurationMin} mins total</span>
+              </div>
+              <div className="flex items-center gap-1 text-amber-600">
+                <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
+                <span>4.8 rating</span>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* Tabs content */}
-      <section className="flex-1 py-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-          <div className="lg:col-span-2">
-            {/* Tabs Headers */}
-            <div className="flex border-b border-gray-100 mb-6">
+          {/* Curriculum / Overview Tabs */}
+          <div className="space-y-4">
+            <div className="flex border-b border-gray-200">
               <button
                 onClick={() => setActiveTab('overview')}
-                className={`py-3 px-4 text-sm font-semibold border-b-2 transition-colors ${
+                className={`py-3 px-4 text-xs font-mono uppercase tracking-wider font-bold border-b-2 transition-colors ${
                   activeTab === 'overview'
-                    ? 'border-indigo-600 text-indigo-600'
+                    ? 'border-indigo-600 text-indigo-700'
                     : 'border-transparent text-gray-500 hover:text-gray-900'
                 }`}
               >
@@ -423,9 +314,9 @@ export default function CourseDetailPage() {
               </button>
               <button
                 onClick={() => setActiveTab('curriculum')}
-                className={`py-3 px-4 text-sm font-semibold border-b-2 transition-colors ${
+                className={`py-3 px-4 text-xs font-mono uppercase tracking-wider font-bold border-b-2 transition-colors ${
                   activeTab === 'curriculum'
-                    ? 'border-indigo-600 text-indigo-600'
+                    ? 'border-indigo-600 text-indigo-700'
                     : 'border-transparent text-gray-500 hover:text-gray-900'
                 }`}
               >
@@ -433,11 +324,10 @@ export default function CourseDetailPage() {
               </button>
             </div>
 
-            {/* Tabs Panels */}
             {activeTab === 'overview' ? (
-              <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">About this course</h3>
-                <div className="text-gray-600 text-sm sm:text-base leading-relaxed space-y-4 whitespace-pre-line">
+              <div className="bg-white border border-hairline rounded-2xl p-6 shadow-sm">
+                <h3 className="text-sm font-bold text-gray-900 mb-3 font-mono uppercase tracking-wider">About this course</h3>
+                <div className="text-gray-600 text-xs sm:text-sm leading-relaxed space-y-4 whitespace-pre-line">
                   {course.description}
                 </div>
               </div>
@@ -452,9 +342,101 @@ export default function CourseDetailPage() {
             )}
           </div>
         </div>
-      </section>
 
-      {/* simulated Vercel-style mock payment gateway modal */}
+        {/* Pricing Checkouts Sidebar Card */}
+        <div className="lg:col-span-1">
+          <Card className="overflow-hidden border border-hairline bg-white shadow-sm" padding="none">
+            <div className="aspect-video relative bg-slate-950 flex items-center justify-center">
+              {course.thumbnail ? (
+                <img
+                  src={course.thumbnail}
+                  alt={course.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <BookOpen className="w-12 h-12 text-white/30" />
+              )}
+              {lessons.some((l) => l.isPreview) && (
+                <button
+                  onClick={() => {
+                    const preview = lessons.find((l) => l.isPreview)
+                    if (preview) handlePreviewPlay(preview)
+                  }}
+                  className="absolute inset-0 bg-black/40 flex items-center justify-center group hover:bg-black/50 transition-colors"
+                >
+                  <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+                    <Play className="w-4 h-4 text-indigo-600 fill-indigo-600 ml-0.5" />
+                  </div>
+                </button>
+              )}
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-black text-gray-900">
+                  ₹{course.price}
+                </span>
+                <span className="text-xs text-gray-400 line-through">
+                  ₹{Math.round(course.price * 3.5)}
+                </span>
+              </div>
+
+              {isEnrolled ? (
+                <div className="space-y-3.5">
+                  <Button
+                    onClick={() => {
+                      if (lessons.length > 0) {
+                        router.push(`/learn/${course._id}/${lessons[0]._id}`)
+                      }
+                    }}
+                    className="w-full justify-center h-11 text-xs"
+                  >
+                    Resume Learning
+                  </Button>
+                  
+                  <div className="pt-4 border-t border-hairline bg-canvas-soft p-3.5 rounded-xl text-left text-xs space-y-2 font-medium text-zinc-700">
+                    <p className="font-mono text-[9px] text-zinc-400 font-bold uppercase tracking-wider mb-1">Receipt details</p>
+                    <div className="flex justify-between">
+                      <span className="text-zinc-400">Status</span>
+                      <span className="text-emerald-600 font-bold uppercase text-[10px]">Paid</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-zinc-400">Price Paid</span>
+                      <span className="font-semibold text-primary">₹{course.price}</span>
+                    </div>
+                    {enrollmentDetails?.razorpayPaymentId && (
+                      <div className="flex justify-between">
+                        <span className="text-zinc-400">Payment Ref</span>
+                        <span className="font-mono text-[10px] text-primary truncate max-w-[130px]">{enrollmentDetails.razorpayPaymentId}</span>
+                      </div>
+                    )}
+                    {enrollmentDetails?.enrolledAt && (
+                      <div className="flex justify-between">
+                        <span className="text-zinc-400">Purchase Date</span>
+                        <span className="text-primary">{new Date(enrollmentDetails.enrolledAt).toLocaleDateString()}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <Button
+                  onClick={handleEnroll}
+                  loading={enrollLoading}
+                  className="w-full justify-center h-11 text-xs"
+                >
+                  {user ? 'Enroll Now' : 'Log in to Enroll'}
+                </Button>
+              )}
+
+              <p className="text-[10px] text-gray-400 text-center leading-normal">
+                100% money-back guarantee · Lifetime access to content
+              </p>
+            </div>
+          </Card>
+        </div>
+      </div>
+
+      {/* Mock Sandbox Modal */}
       {showMockGateway && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <Card className="w-full max-w-md bg-white overflow-hidden shadow-2xl relative border border-hairline" padding="lg">
@@ -489,7 +471,6 @@ export default function CourseDetailPage() {
                 </div>
               </div>
 
-              {/* simulated card payment fields */}
               <div className="space-y-4">
                 <Input
                   label="Simulated Card Number"
@@ -528,12 +509,11 @@ export default function CourseDetailPage() {
                         courseId: course?._id,
                       })
                       setIsEnrolled(true)
-                      // Refetch course details to update receipt info
+                      // Refetch course details
                       const enrollData = await api.get(`/api/enrollments/${course?._id}`)
                       setEnrollmentDetails(enrollData.enrollment)
                       setShowMockGateway(false)
                       setMockOrderId('')
-                      router.push('/dashboard')
                     } catch (err: any) {
                       alert(err.message || 'Mock payment verification failed')
                     } finally {
@@ -562,12 +542,11 @@ export default function CourseDetailPage() {
           </Card>
         </div>
       )}
-    
+
       {/* Free Preview Video Modal */}
       {previewLesson && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-white rounded-xl overflow-hidden shadow-2xl border border-gray-100 w-full max-w-3xl relative">
-            {/* Modal Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50">
               <div>
                 <span className="font-mono text-[10px] text-indigo-600 font-bold uppercase tracking-wider">
@@ -585,7 +564,6 @@ export default function CourseDetailPage() {
               </button>
             </div>
 
-            {/* Video Box */}
             <div className="aspect-video bg-black relative flex items-center justify-center text-white">
               {previewLoading ? (
                 <div className="text-center space-y-3">
@@ -596,7 +574,7 @@ export default function CourseDetailPage() {
                 <video
                   src={
                     previewUrl.includes('localhost:9000')
-                      ? 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' // fallback for dummy public R2 URL
+                      ? 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
                       : previewUrl
                   }
                   className="w-full h-full"
@@ -612,8 +590,6 @@ export default function CourseDetailPage() {
           </div>
         </div>
       )}
-
-      <Footer />
     </div>
   )
 }

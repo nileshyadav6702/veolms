@@ -3,7 +3,7 @@
 import { useState, Suspense, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Mail, Lock, BookOpen, AlertCircle } from 'lucide-react'
+import { Mail, Lock, BookOpen, AlertCircle, Sparkles, Shield, ArrowRight } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Card from '@/components/ui/Card'
@@ -38,7 +38,6 @@ function LoginForm() {
     setError(null)
     setValidationErrors({})
 
-    // Simple validation
     const errors: Record<string, string> = {}
     if (!email) errors.email = 'Email is required'
     if (!password) errors.password = 'Password is required'
@@ -64,25 +63,50 @@ function LoginForm() {
     }
   }
 
+  const handleQuickLogin = async (role: 'student' | 'admin') => {
+    const demoEmail = role === 'student' ? 'student@veolms.com' : 'admin@veolms.com'
+    const demoPassword = role === 'student' ? 'Student@123' : 'Admin@123'
+    setEmail(demoEmail)
+    setPassword(demoPassword)
+    setError(null)
+    setValidationErrors({})
+
+    try {
+      setLoading(true)
+      const data = await api.post('/api/auth/login', { email: demoEmail, password: demoPassword })
+      if (data.success && data.token && data.user) {
+        login(data.token, data.user as User)
+        const target = redirect || (data.user.role === 'admin' ? '/admin' : '/dashboard')
+        router.replace(target)
+      } else {
+        setError('Login failed. Please try again.')
+      }
+    } catch (err: any) {
+      setError(err.message || 'Invalid credentials or database server offline.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
-    <Card className="w-full max-w-md bg-white border border-gray-100 shadow-xl" padding="lg">
-      <div className="text-center mb-8">
-        <Link href="/" className="inline-flex items-center gap-2 mb-4">
-          <div className="w-9 h-9 bg-indigo-600 rounded-lg flex items-center justify-center shadow-sm">
+    <div className="w-full max-w-md space-y-6">
+      <div className="text-center md:text-left mb-6">
+        <Link href="/" className="inline-flex items-center gap-2.5 mb-6">
+          <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center shadow-sm">
             <BookOpen className="w-4 h-4 text-white" />
           </div>
-          <span className="text-xl font-bold text-gray-900">VeoLMS</span>
+          <span className="text-lg font-bold tracking-tight text-primary">VeoLMS Workspace</span>
         </Link>
-        <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Welcome back</h2>
-        <p className="text-gray-500 text-xs mt-1">
-          Enter your details below to access your learning account
+        <h2 className="text-2xl font-bold text-primary tracking-tight">Welcome back.</h2>
+        <p className="text-body text-xs mt-1">
+          Enter your details below to access your learning portal.
         </p>
       </div>
 
       {error && (
-        <div className="mb-5 p-3 rounded-lg bg-red-50 border border-red-100 flex items-start gap-2 text-xs text-red-600">
+        <div className="p-3.5 rounded-lg bg-red-50 border border-red-100 flex items-start gap-2.5 text-xs text-red-600">
           <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-          <span>{error}</span>
+          <span className="font-medium">{error}</span>
         </div>
       )}
 
@@ -91,11 +115,11 @@ function LoginForm() {
           label="Email address"
           type="email"
           name="email"
-          placeholder="you@example.com"
+          placeholder="student@veolms.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           error={validationErrors.email}
-          leftIcon={<Mail className="w-4 h-4" />}
+          leftIcon={<Mail className="w-4 h-4 text-mute" />}
           autoComplete="email"
           required
         />
@@ -108,54 +132,106 @@ function LoginForm() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           error={validationErrors.password}
-          leftIcon={<Lock className="w-4 h-4" />}
+          leftIcon={<Lock className="w-4 h-4 text-mute" />}
           autoComplete="current-password"
           required
         />
 
         <div className="text-right">
-          <span className="text-xs text-indigo-600 hover:text-indigo-700 font-medium cursor-pointer">
+          <span className="text-xs text-mute hover:text-primary font-medium cursor-pointer transition-colors">
             Forgot password?
           </span>
         </div>
 
-        <Button type="submit" loading={loading} className="w-full justify-center mt-2">
+        <Button type="submit" loading={loading} className="w-full justify-center h-11 text-xs">
           Log in
         </Button>
       </form>
 
-      <div className="mt-6 text-center text-xs text-gray-500">
+      {/* Quick Login Buttons (Review Mode helper block) */}
+      <div className="pt-4 border-t border-hairline space-y-3 bg-canvas-soft-2/50 rounded-xl p-4 border">
+        <div className="flex items-center gap-1.5 text-[10px] font-mono text-mute font-bold uppercase tracking-wider">
+          <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+          <span>Quick Access Controls (Demo)</span>
+        </div>
+        <div className="grid grid-cols-2 gap-2.5">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => handleQuickLogin('student')}
+            disabled={loading}
+            className="text-[11px] justify-center bg-white"
+          >
+            Student Login
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => handleQuickLogin('admin')}
+            disabled={loading}
+            className="text-[11px] justify-center bg-white"
+          >
+            Admin Console
+          </Button>
+        </div>
+      </div>
+
+      <div className="text-center text-xs text-mute">
         Don't have an account?{' '}
         <Link
           href={redirect ? `/signup?redirect=${encodeURIComponent(redirect)}` : '/signup'}
-          className="text-indigo-600 hover:text-indigo-700 font-semibold"
+          className="text-primary hover:underline font-bold transition-all"
         >
           Sign up free
         </Link>
       </div>
-    </Card>
+    </div>
   )
 }
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50/50 py-12 px-4 sm:px-6 lg:px-8">
-      {/* Background decoration */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden z-0">
-        <div className="w-[500px] h-[500px] bg-gradient-to-br from-indigo-100/30 to-purple-100/30 rounded-full blur-3xl opacity-80" />
+    <div className="min-h-screen flex">
+      {/* Left Column: Stark atmosphere panel (Desktop only) */}
+      <div className="hidden lg:flex lg:w-1/2 bg-zinc-950 vercel-mesh-gradient border-r border-zinc-800 text-white flex-col justify-between p-12 relative overflow-hidden select-none">
+        <div className="flex items-center gap-2.5 z-10">
+          <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center border border-white/10">
+            <BookOpen className="w-4 h-4 text-white" />
+          </div>
+          <span className="font-bold tracking-tight text-sm">VeoLMS Cloud</span>
+        </div>
+
+        <div className="space-y-4 z-10 max-w-lg">
+          <span className="font-mono text-[10px] text-zinc-500 font-bold uppercase tracking-wider flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-indigo-400" /> Platform Services
+          </span>
+          <h1 className="text-4xl font-semibold tracking-[-1.5px] leading-tight text-zinc-100">
+            Learn anything.<br />Build everything.
+          </h1>
+          <p className="text-zinc-400 text-sm leading-relaxed">
+            The stark, high-fidelity developer learning experience. Build modular apps, stream presigned lesson video components, and manage transactions seamlessly.
+          </p>
+        </div>
+
+        {/* Small bottom footer credentials */}
+        <div className="z-10 flex items-center justify-between text-[10px] font-mono text-zinc-500 font-bold uppercase tracking-wider">
+          <span>Enterprise Console v2.0</span>
+          <span>© 2026 VeoLMS</span>
+        </div>
       </div>
 
-      <div className="relative z-10 w-full max-w-md">
+      {/* Right Column: Authentication Card Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 bg-white overflow-y-auto">
         <Suspense
           fallback={
-            <Card className="w-full max-w-md bg-white border border-gray-100 shadow-xl p-8">
-              <div className="animate-pulse space-y-6">
-                <div className="h-6 bg-gray-200 rounded w-1/3 mx-auto" />
-                <div className="h-10 bg-gray-200 rounded w-full" />
-                <div className="h-10 bg-gray-200 rounded w-full" />
-                <div className="h-10 bg-gray-200 rounded w-full" />
-              </div>
-            </Card>
+            <div className="w-full max-w-md p-8 animate-pulse space-y-6">
+              <div className="h-6 bg-canvas-soft-2 rounded w-1/3 mx-auto" />
+              <div className="h-10 bg-canvas-soft-2 rounded w-full" />
+              <div className="h-10 bg-canvas-soft-2 rounded w-full" />
+              <div className="h-10 bg-canvas-soft-2 rounded w-full" />
+            </div>
           }
         >
           <LoginForm />

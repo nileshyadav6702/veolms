@@ -12,13 +12,12 @@ import {
   Settings,
   Loader2,
 } from 'lucide-react'
-import Button from '@/components/ui/Button'
-
 interface VideoPlayerProps {
   src: string
   onProgress?: (currentTime: number, duration: number) => void
   onEnded?: () => void
   initialTime?: number
+  className?: string
 }
 
 export default function VideoPlayer({
@@ -26,6 +25,7 @@ export default function VideoPlayer({
   onProgress,
   onEnded,
   initialTime = 0,
+  className = '',
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -263,9 +263,9 @@ export default function VideoPlayer({
   return (
     <div
       ref={containerRef}
-      className={`relative w-full aspect-video bg-black select-none overflow-hidden rounded-xl group border border-gray-900 shadow-2xl flex items-center justify-center ${
-        isFullscreen ? 'h-screen w-screen rounded-none' : ''
-      }`}
+      className={`relative w-full aspect-video bg-zinc-950 select-none overflow-hidden group ${
+        isFullscreen ? 'fixed inset-0 w-screen h-screen z-50' : ''
+      } ${className}`}
     >
       <video
         ref={videoRef}
@@ -283,123 +283,141 @@ export default function VideoPlayer({
         onEnded={onEnded}
       />
 
-      {/* Buffering Indicator */}
+      {/* Buffering */}
       {isBuffering && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-30 pointer-events-none">
-          <Loader2 className="w-12 h-12 text-indigo-500 animate-spin" />
+        <div className="absolute inset-0 flex items-center justify-center bg-zinc-950/60 backdrop-blur-sm z-30 pointer-events-none">
+          <Loader2 className="w-10 h-10 text-indigo-400 animate-spin" />
         </div>
       )}
 
-      {/* Start Poster Play Overlay */}
+      {/* Play overlay — shown before first play */}
       {!hasStarted && !isBuffering && (
         <div
           onClick={togglePlay}
-          className="absolute inset-0 bg-black/40 flex items-center justify-center z-20 cursor-pointer hover:bg-black/50 transition-colors"
+          className="absolute inset-0 bg-zinc-950/50 flex flex-col items-center justify-center gap-4 z-20 cursor-pointer group/poster"
         >
-          <div className="w-16 h-16 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-all">
-            <Play className="w-6 h-6 fill-white ml-1" />
+          <div className="w-18 h-18 w-[72px] h-[72px] bg-indigo-600 group-hover/poster:bg-indigo-500 text-white rounded-full flex items-center justify-center shadow-[0_0_40px_rgba(99,102,241,0.4)] transition-all duration-200 group-hover/poster:scale-105 group-hover/poster:shadow-[0_0_60px_rgba(99,102,241,0.5)]">
+            <Play className="w-7 h-7 fill-white ml-1" />
           </div>
+          <span className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-widest">
+            Click to play
+          </span>
         </div>
       )}
 
-      {/* Control Bar Overlay */}
+      {/* Controls */}
       <div
-        className={`absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-4 pt-16 flex flex-col gap-3 transition-opacity duration-300 z-20 ${
+        className={`absolute inset-x-0 bottom-0 z-20 transition-opacity duration-300 ${
           showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
       >
-        {/* Seek Bar Scrubber */}
-        <div className="flex items-center gap-3">
+        {/* Gradient backdrop for controls */}
+        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/95 via-zinc-950/50 to-transparent pointer-events-none" />
+
+        <div className="relative px-4 pb-4 pt-10 flex flex-col gap-2">
+          {/* Seek scrubber */}
           <input
             type="range"
             min="0"
             max={duration || 100}
             value={currentTime}
             onChange={handleSeek}
-            className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-indigo-500 hover:h-1.5 transition-all outline-none"
+            style={{ '--progress': `${((currentTime / (duration || 1)) * 100).toFixed(1)}%` } as React.CSSProperties}
+            className="w-full h-1 rounded-full appearance-none cursor-pointer outline-none bg-zinc-700 accent-indigo-500 hover:h-[5px] transition-all duration-100"
           />
-        </div>
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4 text-white">
-            {/* Play/Pause */}
-            <button onClick={togglePlay} className="p-1 hover:text-indigo-400 transition-colors">
-              {isPlaying ? (
-                <Pause className="w-5 h-5 fill-current" />
-              ) : (
-                <Play className="w-5 h-5 fill-current" />
-              )}
-            </button>
-
-            {/* Skip Back */}
-            <button
-              onClick={() => {
-                if (videoRef.current) {
-                  videoRef.current.currentTime = Math.max(0, videoRef.current.currentTime - 10)
-                }
-              }}
-              className="p-1 hover:text-indigo-400 transition-colors"
-            >
-              <RotateCcw className="w-4 h-4" />
-            </button>
-
-            {/* Volume */}
-            <div className="flex items-center gap-2 group/volume">
-              <button onClick={toggleMute} className="p-1 hover:text-indigo-400 transition-colors">
-                {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-              </button>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.05"
-                value={isMuted ? 0 : volume}
-                onChange={handleVolumeChange}
-                className="w-0 group-hover/volume:w-20 transition-all duration-200 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-white"
-              />
-            </div>
-
-            {/* Time Stamp */}
-            <span className="text-xs font-mono font-medium">
-              {formatTime(currentTime)} / {formatTime(duration)}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-4 text-white">
-            {/* Playback Speed Setting */}
-            <div className="relative">
+          {/* Controls row */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3 text-zinc-200">
+              {/* Play/Pause */}
               <button
-                onClick={() => setShowSpeedMenu(!showSpeedMenu)}
-                className="flex items-center gap-1 text-xs font-semibold px-2 py-1 bg-white/10 rounded-lg hover:bg-white/20 transition-colors border border-white/5"
+                onClick={togglePlay}
+                className="p-1.5 rounded-lg hover:bg-white/10 hover:text-white transition-all"
               >
-                <Settings className="w-3.5 h-3.5" />
-                <span>{playbackRate === 1 ? 'Normal' : `${playbackRate}x`}</span>
+                {isPlaying ? (
+                  <Pause className="w-5 h-5 fill-current" />
+                ) : (
+                  <Play className="w-5 h-5 fill-current" />
+                )}
               </button>
 
-              {showSpeedMenu && (
-                <div className="absolute right-0 bottom-full mb-2 bg-zinc-950 border border-zinc-800 rounded-lg shadow-xl overflow-hidden min-w-[100px] z-30">
-                  {[0.75, 1, 1.25, 1.5, 2].map((rate) => (
-                    <button
-                      key={rate}
-                      onClick={() => changeSpeed(rate)}
-                      className={`w-full text-left text-xs px-3 py-2 hover:bg-zinc-800 transition-colors ${
-                        playbackRate === rate ? 'text-indigo-400 font-bold' : 'text-zinc-300'
-                      }`}
-                    >
-                      {rate === 1 ? 'Normal' : `${rate}x`}
-                    </button>
-                  ))}
-                </div>
-              )}
+              {/* Skip back 10s */}
+              <button
+                onClick={() => {
+                  if (videoRef.current)
+                    videoRef.current.currentTime = Math.max(0, videoRef.current.currentTime - 10)
+                }}
+                className="p-1.5 rounded-lg hover:bg-white/10 hover:text-white transition-all"
+                title="Back 10s"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </button>
+
+              {/* Volume */}
+              <div className="flex items-center gap-1.5 group/vol">
+                <button
+                  onClick={toggleMute}
+                  className="p-1.5 rounded-lg hover:bg-white/10 hover:text-white transition-all"
+                >
+                  {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                </button>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={isMuted ? 0 : volume}
+                  onChange={handleVolumeChange}
+                  className="w-0 group-hover/vol:w-18 group-hover/vol:w-[72px] transition-all duration-200 h-1 rounded-full appearance-none cursor-pointer bg-zinc-600 accent-indigo-400 outline-none"
+                />
+              </div>
+
+              {/* Timestamp */}
+              <span className="text-[11px] font-mono text-zinc-400 tabular-nums">
+                {formatTime(currentTime)}
+                <span className="text-zinc-600 mx-0.5">/</span>
+                {formatTime(duration)}
+              </span>
             </div>
 
-            {/* Fullscreen */}
-            <button
-              onClick={toggleFullscreen}
-              className="p-1 hover:text-indigo-400 transition-colors"
-            >
-              {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
-            </button>
+            <div className="flex items-center gap-2 text-zinc-200">
+              {/* Speed */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowSpeedMenu(!showSpeedMenu)}
+                  className="flex items-center gap-1 text-[11px] font-bold font-mono px-2.5 py-1 bg-zinc-800/80 border border-zinc-700/60 hover:bg-zinc-700/80 hover:border-zinc-600 rounded-lg transition-all"
+                >
+                  <Settings className="w-3 h-3" />
+                  <span>{playbackRate === 1 ? '1x' : `${playbackRate}x`}</span>
+                </button>
+
+                {showSpeedMenu && (
+                  <div className="absolute right-0 bottom-full mb-2 bg-zinc-900 border border-zinc-700/60 rounded-xl shadow-2xl overflow-hidden min-w-[90px] z-30">
+                    {[0.75, 1, 1.25, 1.5, 2].map((rate) => (
+                      <button
+                        key={rate}
+                        onClick={() => changeSpeed(rate)}
+                        className={`w-full text-left text-xs px-3 py-2 hover:bg-zinc-800 transition-colors font-mono ${
+                          playbackRate === rate
+                            ? 'text-indigo-400 font-bold bg-indigo-500/10'
+                            : 'text-zinc-300'
+                        }`}
+                      >
+                        {rate === 1 ? '1× Normal' : `${rate}×`}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Fullscreen */}
+              <button
+                onClick={toggleFullscreen}
+                className="p-1.5 rounded-lg hover:bg-white/10 hover:text-white transition-all"
+              >
+                {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
         </div>
       </div>

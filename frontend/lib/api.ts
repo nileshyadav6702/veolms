@@ -19,7 +19,16 @@ async function throwIfError(res: Response) {
         window.location.href = '/login'
       }
     }
-    throw new Error((data as { message?: string }).message ?? `HTTP ${res.status}`)
+    let errorMsg = (data as { message?: string }).message ?? `HTTP ${res.status}`
+    if (data.errors && typeof data.errors === 'object') {
+      const details = Object.entries(data.errors)
+        .map(([field, msgs]: any) => `${field}: ${Array.isArray(msgs) ? msgs.join(', ') : msgs}`)
+        .join('\n')
+      if (details) {
+        errorMsg += `:\n${details}`
+      }
+    }
+    throw new Error(errorMsg)
   }
   return res.json()
 }

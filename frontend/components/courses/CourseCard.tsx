@@ -25,9 +25,11 @@ const GRADIENTS = [
 export default function CourseCard({
   course,
   index = 0,
+  hrefPrefix = '/courses',
 }: {
   course: Course
   index?: number
+  hrefPrefix?: string
 }) {
   const gradient = GRADIENTS[index % GRADIENTS.length]
   const rating = course.rating ?? 4.8
@@ -35,7 +37,7 @@ export default function CourseCard({
   const originalPrice = Math.round(course.price * 3.5)
 
   return (
-    <Link href={`/courses/${course.slug}`} className="group block text-zinc-900">
+    <Link href={`${hrefPrefix}/${course.slug}`} className="group block text-zinc-900">
       <div className="bg-white rounded-xl vercel-card-shadow hover:-translate-y-0.5 vercel-card-shadow-hover transition-all duration-200 overflow-hidden">
         {/* Thumbnail */}
         <div

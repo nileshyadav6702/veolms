@@ -33,7 +33,7 @@ async function seed() {
   const jsCourse = await Course.create({
     title: 'JavaScript Fundamentals',
     slug: 'javascript-fundamentals',
-    thumbnail: 'https://via.placeholder.com/640x360/F7DF1E/000000?text=JavaScript',
+    thumbnail: 'https://images.unsplash.com/photo-1579468118864-1b9ea3c0db4a?w=800&auto=format&fit=crop',
     description: 'Master JavaScript from scratch. Learn variables, functions, closures, async/await, and DOM manipulation. Perfect for beginners who want to build interactive web pages.',
     shortDescription: 'Complete JavaScript course for beginners',
     instructor: 'Admin',
@@ -63,7 +63,7 @@ async function seed() {
   const reactCourse = await Course.create({
     title: 'React for Beginners',
     slug: 'react-for-beginners',
-    thumbnail: 'https://via.placeholder.com/640x360/61DAFB/000000?text=React',
+    thumbnail: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&auto=format&fit=crop',
     description: 'Build modern web applications with React. Learn components, hooks, state management, and how to connect to a REST API. Go from zero to building real projects.',
     shortDescription: 'Learn React from the ground up with hands-on projects',
     instructor: 'Admin',
@@ -93,7 +93,7 @@ async function seed() {
   const nodeCourse = await Course.create({
     title: 'Node.js & Express API Development',
     slug: 'nodejs-express-api',
-    thumbnail: 'https://via.placeholder.com/640x360/339933/FFFFFF?text=Node.js',
+    thumbnail: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&auto=format&fit=crop',
     description: 'Build production-ready REST APIs with Node.js and Express. Learn routing, middleware, authentication with JWT, MongoDB integration, and how to deploy your API to the cloud.',
     shortDescription: 'Build REST APIs with Node.js, Express, and MongoDB',
     instructor: 'Admin',

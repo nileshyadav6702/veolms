@@ -1,6 +1,4 @@
-'use client'
-
-import { ReactNode } from 'react'
+import React, { ReactNode } from 'react'
 import Spinner from '@/components/ui/Spinner'
 
 interface Column {
@@ -14,6 +12,7 @@ interface DataTableProps {
   loading?: boolean
   emptyMessage?: string
   children: ReactNode
+  overflowVisible?: boolean
 }
 
 export default function DataTable({
@@ -21,10 +20,11 @@ export default function DataTable({
   loading = false,
   emptyMessage = 'No data records found.',
   children,
+  overflowVisible = false,
 }: DataTableProps) {
   return (
-    <div className="w-full bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
-      <div className="overflow-x-auto">
+    <div className={`w-full bg-white border border-gray-100 rounded-xl shadow-sm ${overflowVisible ? 'overflow-visible z-10' : 'overflow-hidden'}`}>
+      <div className={overflowVisible ? 'overflow-visible' : 'overflow-x-auto'}>
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-100">
@@ -56,7 +56,7 @@ export default function DataTable({
                   </div>
                 </td>
               </tr>
-            ) : children ? (
+            ) : React.Children.count(children) > 0 ? (
               children
             ) : (
               <tr>

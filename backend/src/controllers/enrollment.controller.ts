@@ -1,12 +1,22 @@
 import { Request, Response } from 'express';
 import { Enrollment } from '../models/Enrollment';
+import { formatThumbnailUrl } from './course.controller';
 
 export async function getMyEnrollments(req: Request, res: Response): Promise<void> {
   try {
     const enrollments = await Enrollment.find({ userId: req.user!.id, paymentStatus: 'paid' })
-      .populate('courseId', 'title slug thumbnail shortDescription instructor totalLessons totalDuration')
+      .populate('courseId', 'title slug thumbnail shortDescription instructor totalLessons totalDuration price')
       .sort({ enrolledAt: -1 });
-    res.json({ success: true, enrollments });
+    
+    const formattedEnrollments = enrollments.map((enrollment) => {
+      const doc = enrollment.toObject();
+      if (doc.courseId && typeof doc.courseId === 'object' && (doc.courseId as any).thumbnail) {
+        (doc.courseId as any).thumbnail = formatThumbnailUrl((doc.courseId as any).thumbnail, req);
+      }
+      return doc;
+    });
+    
+    res.json({ success: true, enrollments: formattedEnrollments });
   } catch {
     res.status(500).json({ success: false, message: 'Server error' });
   }
