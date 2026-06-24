@@ -85,11 +85,28 @@ export default function LearnPage() {
       setLoading(true)
       // Fetch course metadata (which has sections)
       const courseData = await api.get(`/api/courses/${courseId}`)
+      
+      const sections = courseData.course.sections || []
+      // Sort sections by order in place
+      sections.sort((a: any, b: any) => a.order - b.order)
       setCourse(courseData.course)
 
       // Fetch all lessons for this course
       const lessonsData = await api.get(`/api/lessons/course/${courseId}`)
-      const sortedLessons = (lessonsData.lessons as Lesson[]).sort((a, b) => a.order - b.order)
+      
+      const sectionOrderMap = new Map<string, number>()
+      sections.forEach((sec: any, index: number) => {
+        sectionOrderMap.set(sec._id, index)
+      })
+
+      const sortedLessons = (lessonsData.lessons as Lesson[]).sort((a, b) => {
+        const secAIndex = sectionOrderMap.get(a.sectionId) ?? 9999
+        const secBIndex = sectionOrderMap.get(b.sectionId) ?? 9999
+        if (secAIndex !== secBIndex) {
+          return secAIndex - secBIndex
+        }
+        return a.order - b.order
+      })
       setLessons(sortedLessons)
 
       // Set active lesson

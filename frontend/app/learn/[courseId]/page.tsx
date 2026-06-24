@@ -75,9 +75,24 @@ export default function CourseCurriculumPage() {
 
       // Fetch course and lessons
       const courseData = await api.get(`/api/courses/${courseId}`)
+      
+      const sections = courseData.course.sections || []
+      sections.sort((a: any, b: any) => a.order - b.order)
       setCourse(courseData.course)
       
-      const sortedLessons = (courseData.lessons || []).sort((a: Lesson, b: Lesson) => a.order - b.order)
+      const sectionOrderMap = new Map<string, number>()
+      sections.forEach((sec: any, index: number) => {
+        sectionOrderMap.set(sec._id, index)
+      })
+
+      const sortedLessons = (courseData.lessons || []).sort((a: Lesson, b: Lesson) => {
+        const secAIndex = sectionOrderMap.get(a.sectionId) ?? 9999
+        const secBIndex = sectionOrderMap.get(b.sectionId) ?? 9999
+        if (secAIndex !== secBIndex) {
+          return secAIndex - secBIndex
+        }
+        return a.order - b.order
+      })
       setLessons(sortedLessons)
 
       // Fetch progress

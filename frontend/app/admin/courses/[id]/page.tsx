@@ -1052,6 +1052,7 @@ export default function CourseBuilderPage() {
                           {(videoFile ? videoPreviewUrl : resolvedVideoUrl) ? (
                             <VideoPlayer
                               src={videoFile ? videoPreviewUrl : resolvedVideoUrl}
+                              type={videoFile ? videoFile.type : undefined}
                             />
                           ) : (
                             <div className="flex items-center gap-2 text-zinc-500 text-xs">
@@ -1221,7 +1222,7 @@ export default function CourseBuilderPage() {
                           </button>
                         </div>
                         <div className="relative rounded-xl overflow-hidden aspect-video bg-black flex items-center justify-center">
-                          <VideoPlayer src={videoPreviewUrl} />
+                          <VideoPlayer src={videoPreviewUrl} type={videoFile ? videoFile.type : undefined} />
                         </div>
                       </div>
                     ) : (

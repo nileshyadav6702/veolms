@@ -333,25 +333,36 @@ export default function AdminCharts({ chartData }: AdminChartsProps) {
 
           {courseData.length > 0 ? (
             <div className="space-y-4 mt-6">
-              {courseData.map((course, idx) => (
-                <div key={idx} className="space-y-1.5">
-                  <div className="flex justify-between items-center text-xs font-semibold">
-                    <span className="text-primary truncate max-w-[200px]" title={course.name}>
-                      {course.name}
-                    </span>
-                    <span className="font-mono text-mute shrink-0">
-                      {course.count} ({course.percentage}%)
-                    </span>
+              {courseData.map((course, idx) => {
+                const colorClasses = [
+                  'bg-primary',
+                  'bg-zinc-600',
+                  'bg-zinc-400',
+                  'bg-zinc-300',
+                  'bg-zinc-200'
+                ]
+                const barColor = colorClasses[idx % colorClasses.length]
+
+                return (
+                  <div key={idx} className="space-y-1.5">
+                    <div className="flex justify-between items-center text-xs font-semibold">
+                      <span className="text-primary truncate max-w-[200px]" title={course.name}>
+                        {course.name}
+                      </span>
+                      <span className="font-mono text-mute shrink-0">
+                        {course.count} ({course.percentage}%)
+                      </span>
+                    </div>
+                    {/* Horizontal Progress weight line */}
+                    <div className="h-2 bg-canvas-soft border border-hairline rounded-full overflow-hidden">
+                      <div
+                        className={`h-full ${barColor} rounded-full transition-all duration-700`}
+                        style={{ width: `${course.percentage}%` }}
+                      />
+                    </div>
                   </div>
-                  {/* Horizontal Progress weight line */}
-                  <div className="h-2 bg-canvas-soft border border-hairline rounded-full overflow-hidden">
-                    <div
-                      className={`h-full ${course.color} rounded-full transition-all duration-700`}
-                      style={{ width: `${course.percentage}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-16 text-center text-zinc-400">

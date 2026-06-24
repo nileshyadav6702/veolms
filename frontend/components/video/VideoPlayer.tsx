@@ -10,6 +10,7 @@ import '@vidstack/react/player/styles/default/layouts/video.css'
 
 interface VideoPlayerProps {
   src: string
+  type?: string
   onProgress?: (currentTime: number, duration: number) => void
   onEnded?: () => void
   initialTime?: number
@@ -19,6 +20,7 @@ interface VideoPlayerProps {
 
 export default function VideoPlayer({
   src,
+  type,
   onProgress,
   onEnded,
   initialTime = 0,
@@ -59,8 +61,13 @@ export default function VideoPlayer({
 
   // Explicitly identify HLS URLs to load the HLS provider (query parameters like ?token=... mask the file extension)
   const isHls = resolvedSrc.includes('.m3u8') || resolvedSrc.includes('/hls/')
+  const isBlob = resolvedSrc.startsWith('blob:')
   const playerSource = isHls
     ? { src: resolvedSrc, type: 'application/x-mpegurl' as const }
+    : type
+    ? { src: resolvedSrc, type: type as any }
+    : isBlob
+    ? { src: resolvedSrc, type: 'video/mp4' as const }
     : resolvedSrc
 
   return (

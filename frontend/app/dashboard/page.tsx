@@ -234,10 +234,10 @@ export default function StudentDashboardPage() {
                 const grad = GRADIENTS[idx % GRADIENTS.length]
 
                 return (
-                  <Card key={enroll._id} padding="none" className="overflow-hidden border border-hairline bg-white shadow-sm hover:shadow-md hover:border-zinc-300 hover:scale-[1.002] transition-all duration-300">
-                    <div className="flex flex-col sm:flex-row">
+                  <Card key={enroll._id} padding="none" className="group overflow-hidden border border-hairline bg-white shadow-sm hover:shadow-md hover:border-zinc-300 hover:scale-[1.002] transition-all duration-300">
+                    <div className="flex flex-col sm:flex-row p-4 gap-5 items-center">
                       {/* Compact Image/Gradient Banner */}
-                      <div className={`w-full sm:w-60 md:w-64 aspect-video sm:aspect-auto bg-gradient-to-br ${grad} shrink-0 relative overflow-hidden`}>
+                      <div className={`w-full sm:w-48 md:w-52 aspect-video bg-gradient-to-br ${grad} shrink-0 rounded-xl border border-zinc-200/80 overflow-hidden relative shadow-sm`}>
                         {course.thumbnail ? (
                           <img
                             src={course.thumbnail}
@@ -246,15 +246,15 @@ export default function StudentDashboardPage() {
                           />
                         ) : (
                           <div className="absolute inset-0 flex items-center justify-center">
-                            <BookOpen className="w-10 h-10 text-white/30" />
+                            <BookOpen className="w-8 h-8 text-white/30" />
                           </div>
                         )}
                       </div>
 
                       {/* Info Panel */}
-                      <div className="flex-1 p-6 flex flex-col justify-between">
+                      <div className="flex-1 p-1 flex flex-col justify-between w-full">
                         <div>
-                          <div className="flex items-center justify-between mb-1.5">
+                          <div className="flex items-center justify-between mb-1">
                             <span className="text-[10px] text-zinc-400 font-semibold font-mono">
                               Enrolled {new Date(enroll.enrolledAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                             </span>
@@ -263,13 +263,13 @@ export default function StudentDashboardPage() {
                           <h3 className="font-extrabold text-zinc-900 text-base mb-1 line-clamp-1 hover:text-indigo-600 transition-colors">
                             <Link href={`/learn/${course._id}`}>{course.title}</Link>
                           </h3>
-                          <p className="text-xs text-zinc-500 line-clamp-2 mb-4 leading-relaxed">
+                          <p className="text-xs text-zinc-500 line-clamp-2 mb-3 leading-relaxed">
                             {course.shortDescription}
                           </p>
                         </div>
 
                         {/* Progress and Workspace Navigation */}
-                        <div className="space-y-3.5 pt-3.5 border-t border-zinc-100">
+                        <div className="space-y-3 pt-3 border-t border-zinc-100">
                           <div className="flex items-center justify-between text-xs font-semibold">
                             <span className="text-zinc-800 font-bold">{percent}% Complete</span>
                             <span className="text-zinc-400 font-mono text-[11px]">
@@ -331,35 +331,51 @@ export default function StudentDashboardPage() {
                 const percent = Math.round((item.watchedSeconds / (item.duration || 1)) * 100)
 
                 return (
-                  <Card key={item._id} padding="sm" className="group bg-white border border-hairline shadow-sm hover:border-zinc-300 hover:shadow-md transition-all duration-300">
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 bg-indigo-50 border border-indigo-100/50 rounded-lg flex items-center justify-center text-indigo-500 shrink-0 mt-0.5 group-hover:scale-105 transition-transform">
-                        {isCompleted ? (
-                          <CheckCircle2 className="w-4.5 h-4.5 text-indigo-600" />
-                        ) : (
-                          <Play className="w-3.5 h-3.5 fill-indigo-500 text-indigo-500" />
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <span className="text-[9px] font-bold font-mono text-zinc-400 uppercase tracking-wider block truncate">
-                          {item.courseId.title}
-                        </span>
-                        <h4 className="font-bold text-zinc-900 text-xs truncate group-hover:text-indigo-600 transition-colors">
-                          {item.lessonId.title}
-                        </h4>
+                  <Link key={item._id} href={`/learn/${item.courseId._id}/${item.lessonId._id}`} className="block">
+                    <div className="group bg-white border border-hairline p-4 rounded-xl shadow-sm hover:border-zinc-300 hover:shadow-md transition-all duration-300 flex items-center justify-between gap-4 cursor-pointer">
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        {/* Icon Indicator */}
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300 ${
+                          isCompleted 
+                            ? 'bg-emerald-50 text-emerald-600 border border-emerald-100/50' 
+                            : 'bg-indigo-50 text-indigo-600 border border-indigo-100/50 group-hover:bg-indigo-600 group-hover:text-white'
+                        }`}>
+                          {isCompleted ? (
+                            <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                          ) : (
+                            <Play className="w-4 h-4 fill-current transition-colors" />
+                          )}
+                        </div>
                         
-                        <div className="flex items-center justify-between text-[10px] text-zinc-400 mt-2.5 pt-2 border-t border-zinc-50 font-medium">
-                          <span>{isCompleted ? 'Finished' : `${percent}% watched`}</span>
-                          <Link
-                            href={`/learn/${item.courseId._id}/${item.lessonId._id}`}
-                            className="flex items-center gap-0.5 text-indigo-600 hover:underline font-bold"
-                          >
-                            Resume <ArrowRight className="w-3 h-3" />
-                          </Link>
+                        {/* Titles & Progress */}
+                        <div className="min-w-0">
+                          <span className="text-[10px] font-bold font-mono text-zinc-400 uppercase tracking-wider block truncate">
+                            {item.courseId.title}
+                          </span>
+                          <h4 className="font-extrabold text-zinc-800 text-xs truncate group-hover:text-indigo-600 transition-colors leading-tight">
+                            {item.lessonId.title}
+                          </h4>
+                          
+                          {/* Progress bar / Complete state */}
+                          {isCompleted ? (
+                            <span className="text-[10px] text-emerald-600 font-semibold block mt-1">Completed</span>
+                          ) : (
+                            <div className="flex items-center gap-2 mt-1.5">
+                              <div className="w-16 h-1 bg-zinc-100 rounded-full overflow-hidden shrink-0">
+                                <div className="h-full bg-indigo-600 rounded-full" style={{ width: `${percent}%` }} />
+                              </div>
+                              <span className="text-[9px] text-zinc-400 font-semibold">{percent}% completed</span>
+                            </div>
+                          )}
                         </div>
                       </div>
+
+                      {/* Chevron indicator */}
+                      <div className="text-zinc-300 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all shrink-0">
+                        <ArrowRight className="w-4 h-4" />
+                      </div>
                     </div>
-                  </Card>
+                  </Link>
                 )
               })}
             </div>
