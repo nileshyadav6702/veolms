@@ -14,6 +14,9 @@ import adminRoutes from './routes/admin.routes';
 
 export const app = express();
 
+// Trust reverse proxy (Render, AWS, Heroku, etc.)
+app.set('trust proxy', 1);
+
 app.use(
   helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' },
