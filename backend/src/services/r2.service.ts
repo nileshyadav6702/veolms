@@ -2,6 +2,7 @@ import { PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from '@aws-sd
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { s3Client } from '../config/r2';
 import { config } from '../config/env';
+import { Readable } from 'stream';
 
 export async function getPresignedPutUrl(key: string, contentType: string): Promise<string> {
   const command = new PutObjectCommand({
@@ -26,4 +27,21 @@ export async function deleteObject(key: string): Promise<void> {
     Key: key,
   });
   await s3Client.send(command);
+}
+
+export async function getObjectStream(key: string): Promise<{
+  stream: Readable;
+  contentType?: string;
+  contentLength?: number;
+}> {
+  const command = new GetObjectCommand({
+    Bucket: config.R2_BUCKET_NAME,
+    Key: key,
+  });
+  const response = await s3Client.send(command);
+  return {
+    stream: response.Body as Readable,
+    contentType: response.ContentType,
+    contentLength: response.ContentLength,
+  };
 }

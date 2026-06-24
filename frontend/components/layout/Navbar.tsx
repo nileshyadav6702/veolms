@@ -6,7 +6,6 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import Button from '@/components/ui/Button'
 import {
-  BookOpen,
   Menu,
   X,
   LayoutDashboard,
@@ -34,9 +33,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 shrink-0">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-sm">
-              <BookOpen className="w-4 h-4 text-white" />
-            </div>
+            <img src="/favicon.svg" alt="VeoLMS Logo" className="w-8 h-8 object-contain" />
             <span className="text-base font-bold tracking-tight text-primary">VeoLMS</span>
           </Link>
 

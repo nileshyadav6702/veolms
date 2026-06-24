@@ -6,7 +6,6 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { api } from '@/lib/api'
 import {
-  BookOpen,
   LayoutDashboard,
   Compass,
   LogOut,
@@ -17,13 +16,8 @@ import {
   ChevronLeft,
   ChevronRight,
   CreditCard,
-  GraduationCap,
-  Mail,
-  Lock,
-  AlertCircle,
-  Sparkles
+  GraduationCap
 } from 'lucide-react'
-import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
 import Card from '@/components/ui/Card'
 import Spinner from '@/components/ui/Spinner'
@@ -76,8 +70,16 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
     { label: 'Billing & Payments', href: '/dashboard/payments', icon: CreditCard },
   ]
 
+  // Redirect to login if user session is cleared
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace('/login')
+    }
+  }, [user, loading, router])
+
   const handleLogout = () => {
     logout()
+    router.replace('/login')
   }
 
   if (loading) {
@@ -89,7 +91,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
   }
 
   if (!user) {
-    return <DashboardLogin />
+    return null
   }
 
   return (
@@ -97,9 +99,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
       {/* Mobile Navbar Header */}
       <div className="md:hidden fixed top-0 inset-x-0 h-14 bg-white border-b border-hairline flex items-center justify-between px-4 z-40">
         <Link href="/" className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center">
-            <BookOpen className="w-4 h-4 text-white" />
-          </div>
+          <img src="/favicon.svg" alt="VeoLMS Logo" className="w-7 h-7 object-contain" />
           <span className="font-bold text-sm tracking-tight text-primary">VeoLMS Dashboard</span>
         </Link>
         <button
@@ -130,9 +130,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
           {/* Header Brand Logo (Desktop only) */}
           <div className={`hidden md:flex items-center ${isCollapsed ? 'flex-col gap-4 py-5' : 'justify-between px-6 py-5'} border-b border-hairline`}>
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shrink-0">
-                <BookOpen className="w-4 h-4 text-white" />
-              </div>
+              <img src="/favicon.svg" alt="VeoLMS Logo" className="w-8 h-8 object-contain shrink-0" />
               {!isCollapsed && (
                 <div>
                   <h1 className="font-bold text-sm text-primary tracking-tight leading-none">
@@ -304,154 +302,4 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
   )
 }
 
-function DashboardLogin() {
-  const { login } = useAuth()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    setValidationErrors({})
-
-    const errors: Record<string, string> = {}
-    if (!email) errors.email = 'Email is required'
-    if (!password) errors.password = 'Password is required'
-    if (Object.keys(errors).length > 0) {
-      setValidationErrors(errors)
-      return
-    }
-
-    try {
-      setLoading(true)
-      const data = await api.post('/api/auth/login', { email, password })
-      if (data.success && data.token && data.user) {
-        login(data.token, data.user)
-      } else {
-        setError('Login failed. Please try again.')
-      }
-    } catch (err: any) {
-      setError(err.message || 'Invalid email or password.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleQuickLogin = async (role: 'student' | 'admin') => {
-    const demoEmail = role === 'student' ? 'student@veolms.com' : 'admin@veolms.com'
-    const demoPassword = role === 'student' ? 'Student@123' : 'Admin@123'
-    setEmail(demoEmail)
-    setPassword(demoPassword)
-    setError(null)
-    setValidationErrors({})
-
-    try {
-      setLoading(true)
-      const data = await api.post('/api/auth/login', { email: demoEmail, password: demoPassword })
-      if (data.success && data.token && data.user) {
-        login(data.token, data.user)
-      } else {
-        setError('Login failed. Please try again.')
-      }
-    } catch (err: any) {
-      setError(err.message || 'Invalid credentials.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-canvas-soft relative overflow-hidden select-none w-full">
-      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-500/10 blur-[100px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-[500px] h-[500px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none" />
-
-      <Card className="w-full max-w-md bg-white border border-hairline shadow-2xl relative z-10 p-8 rounded-2xl" padding="none">
-        <div className="space-y-6">
-          <div className="text-center">
-            <div className="inline-flex items-center gap-2.5 mb-4">
-              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-sm">
-                <BookOpen className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-xl font-bold tracking-tight text-primary">VeoLMS Student Dashboard</span>
-            </div>
-            <h2 className="text-lg font-bold text-gray-900 tracking-tight">Authorization Required</h2>
-            <p className="text-gray-500 text-xs mt-1">
-              Please sign in to access your customized learning space.
-            </p>
-          </div>
-
-          {error && (
-            <div className="p-3.5 rounded-lg bg-red-50 border border-red-100 flex items-start gap-2.5 text-xs text-red-600">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-              <span className="font-medium">{error}</span>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <Input
-              label="Email address"
-              type="email"
-              name="email"
-              placeholder="student@veolms.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              error={validationErrors.email}
-              leftIcon={<Mail className="w-4 h-4 text-zinc-400" />}
-              autoComplete="email"
-              required
-            />
-
-            <Input
-              label="Password"
-              type="password"
-              name="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              error={validationErrors.password}
-              leftIcon={<Lock className="w-4 h-4 text-zinc-400" />}
-              autoComplete="current-password"
-              required
-            />
-
-            <Button type="submit" loading={loading} className="w-full justify-center h-11 text-xs mt-2">
-              Log in to Dashboard
-            </Button>
-          </form>
-
-          <div className="pt-4 border-t border-hairline space-y-3">
-            <div className="flex items-center gap-1.5 text-[9px] font-mono text-zinc-400 font-bold uppercase tracking-wider">
-              <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
-              <span>Demo Quick Controls</span>
-            </div>
-            <div className="grid grid-cols-2 gap-2.5">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => handleQuickLogin('student')}
-                disabled={loading}
-                className="text-[11px] justify-center bg-white"
-              >
-                Student Demo
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => handleQuickLogin('admin')}
-                disabled={loading}
-                className="text-[11px] justify-center bg-white"
-              >
-                Admin Demo
-              </Button>
-            </div>
-          </div>
-        </div>
-      </Card>
-    </div>
-  )
-}

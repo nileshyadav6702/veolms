@@ -4,26 +4,13 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import {
-  Play,
   CheckCircle,
   Circle,
-  Menu,
   X,
   ArrowLeft,
-  ChevronRight,
   BookOpen,
   ArrowRight,
-  FileText,
-  Code,
-  Link2,
   Check,
-  Video,
-  Clock,
-  Sparkles,
-  Search,
-  BookOpenCheck,
-  NotebookPen,
-  ExternalLink,
   ChevronDown,
   ChevronUp,
 } from 'lucide-react'
@@ -85,17 +72,12 @@ export default function LearnPage() {
   const [loading, setLoading] = useState(true)
   const [streamLoading, setStreamLoading] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [activeTab, setActiveTab] = useState<'overview' | 'resources' | 'notes'>('overview')
-  const [noteContent, setNoteContent] = useState('')
-  const [noteSavedState, setNoteSavedState] = useState<'saved' | 'saving' | 'idle'>('idle')
-
   // Track expanded section states in sidebar
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({})
 
   // Progress saving ref to avoid stale closure in debounced saves
   const lastSavedTimeRef = useRef<Record<string, number>>({})
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
-  const noteSaveDebounceRef = useRef<NodeJS.Timeout | null>(null)
 
   // Fetch course, lessons, and student progress on mount / param changes
   const loadLearnData = useCallback(async () => {
@@ -122,11 +104,7 @@ export default function LearnPage() {
       })
       setProgressMap(map)
 
-      // Initialize note from localStorage
-      if (active) {
-        const savedNote = localStorage.getItem(`note_${courseId}_${active._id}`) || ''
-        setNoteContent(savedNote)
-      }
+
 
       // Resume time check
       if (active && map[active._id]) {
@@ -172,10 +150,7 @@ export default function LearnPage() {
   useEffect(() => {
     if (currentLesson) {
       loadStreamUrl()
-      // Refresh current note for new active lesson
-      const savedNote = localStorage.getItem(`note_${courseId}_${currentLesson._id}`) || ''
-      setNoteContent(savedNote)
-      setNoteSavedState('idle')
+
     }
   }, [currentLesson, loadStreamUrl, courseId])
 
@@ -184,9 +159,6 @@ export default function LearnPage() {
     return () => {
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current)
-      }
-      if (noteSaveDebounceRef.current) {
-        clearTimeout(noteSaveDebounceRef.current)
       }
     }
   }, [])
@@ -273,23 +245,7 @@ export default function LearnPage() {
     }
   }
 
-  // Local Storage note saving logic
-  const handleNoteContentChange = (val: string) => {
-    setNoteContent(val)
-    setNoteSavedState('saving')
 
-    if (noteSaveDebounceRef.current) {
-      clearTimeout(noteSaveDebounceRef.current)
-    }
-
-    noteSaveDebounceRef.current = setTimeout(() => {
-      if (currentLesson) {
-        localStorage.setItem(`note_${courseId}_${currentLesson._id}`, val)
-        setNoteSavedState('saved')
-        setTimeout(() => setNoteSavedState('idle'), 2000)
-      }
-    }, 1000)
-  }
 
   const toggleSectionExpand = (sectionId: string) => {
     setExpandedSections((prev) => ({
@@ -428,174 +384,12 @@ export default function LearnPage() {
                     </div>
                   </div>
 
-                  {/* Tabs */}
-                  <div className="space-y-4">
-                    <div className="flex border-b border-hairline gap-1">
-                      <button
-                        onClick={() => setActiveTab('overview')}
-                        className={`pb-3 px-4 text-xs font-semibold transition-all relative cursor-pointer ${
-                          activeTab === 'overview' ? 'text-ink' : 'text-mute hover:text-body'
-                        }`}
-                      >
-                        {activeTab === 'overview' && (
-                          <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-ink rounded-full" />
-                        )}
-                        <span className="flex items-center gap-1.5">
-                          <BookOpenCheck className="w-3.5 h-3.5" /> Overview
-                        </span>
-                      </button>
-
-                      <button
-                        onClick={() => setActiveTab('resources')}
-                        className={`pb-3 px-4 text-xs font-semibold transition-all relative cursor-pointer ${
-                          activeTab === 'resources' ? 'text-ink' : 'text-mute hover:text-body'
-                        }`}
-                      >
-                        {activeTab === 'resources' && (
-                          <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-ink rounded-full" />
-                        )}
-                        <span className="flex items-center gap-1.5">
-                          <Link2 className="w-3.5 h-3.5" /> Resources
-                        </span>
-                      </button>
-
-                      <button
-                        onClick={() => setActiveTab('notes')}
-                        className={`pb-3 px-4 text-xs font-semibold transition-all relative cursor-pointer ${
-                          activeTab === 'notes' ? 'text-ink' : 'text-mute hover:text-body'
-                        }`}
-                      >
-                        {activeTab === 'notes' && (
-                          <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-ink rounded-full" />
-                        )}
-                        <span className="flex items-center gap-1.5">
-                          <NotebookPen className="w-3.5 h-3.5" /> Notebook
-                          {noteContent.trim() && (
-                            <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full shrink-0" />
-                          )}
-                        </span>
-                      </button>
-                    </div>
-
-                    {/* Tab contents */}
-                    <div>
-                      {activeTab === 'overview' && (
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
-                          <div className="lg:col-span-2 bg-white border border-hairline rounded-xl p-6 space-y-5 vercel-card-shadow">
-                            <div className="space-y-2">
-                              <span className="text-[9px] font-bold font-mono text-mute uppercase tracking-widest block">Description</span>
-                              <p className="text-body text-sm leading-relaxed">
-                                {currentLesson.description || 'No description for this lesson yet.'}
-                              </p>
-                            </div>
-                            <div className="border-t border-hairline pt-4 space-y-3">
-                              <h4 className="text-xs font-bold text-ink uppercase tracking-wider">Learning Outcomes</h4>
-                              <ul className="space-y-2 text-mute text-xs">
-                                <li className="flex items-start gap-2.5">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-1.5 shrink-0" />
-                                  <span>Demonstrate mastery of core concepts covered in this lesson.</span>
-                                </li>
-                                <li className="flex items-start gap-2.5">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-1.5 shrink-0" />
-                                  <span>Establish optimized workflows aligned with best practices.</span>
-                                </li>
-                                <li className="flex items-start gap-2.5">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-1.5 shrink-0" />
-                                  <span>Apply techniques directly to your own projects.</span>
-                                </li>
-                              </ul>
-                            </div>
-                          </div>
-                          <div className="bg-white border border-hairline rounded-xl p-5 space-y-3 vercel-card-shadow self-start">
-                            <h3 className="font-bold text-xs text-ink uppercase tracking-wider">Lesson Info</h3>
-                            <div className="space-y-3 text-xs">
-                              <div className="flex items-center justify-between py-2 border-b border-hairline">
-                                <span className="text-mute flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> Duration</span>
-                                <span className="text-ink font-semibold font-mono">{Math.round(currentLesson.duration / 60)} min</span>
-                              </div>
-                              <div className="flex items-center justify-between py-2 border-b border-hairline">
-                                <span className="text-mute flex items-center gap-1.5"><Video className="w-3.5 h-3.5" /> Quality</span>
-                                <span className="text-ink font-semibold">1080p</span>
-                              </div>
-                              {course?.instructor && (
-                                <div className="flex items-center justify-between py-2">
-                                  <span className="text-mute">Instructor</span>
-                                  <span className="text-ink font-semibold">{course.instructor}</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {activeTab === 'resources' && (
-                        <div className="bg-white border border-hairline rounded-xl p-6 space-y-4 vercel-card-shadow">
-                          <div>
-                            <h3 className="text-sm font-bold text-ink">Lesson Resources</h3>
-                            <p className="text-xs text-mute mt-1">Downloadable files and links for this lesson.</p>
-                          </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <a href="#" onClick={(e) => e.preventDefault()}
-                              className="group flex items-center justify-between p-4 bg-canvas-soft border border-hairline hover:border-zinc-300 rounded-xl transition-all">
-                              <div className="flex items-center gap-3 min-w-0">
-                                <div className="p-2.5 bg-indigo-50 border border-indigo-100 rounded-xl text-indigo-600 group-hover:bg-indigo-100 transition-colors">
-                                  <Code className="w-4 h-4" />
-                                </div>
-                                <div className="min-w-0">
-                                  <p className="text-xs font-semibold text-ink truncate">Exercise Repository</p>
-                                  <p className="text-[10px] text-mute font-mono mt-0.5">github-source-code.zip</p>
-                                </div>
-                              </div>
-                              <ExternalLink className="w-3.5 h-3.5 text-mute group-hover:text-body transition-colors shrink-0" />
-                            </a>
-                            <a href="#" onClick={(e) => e.preventDefault()}
-                              className="group flex items-center justify-between p-4 bg-canvas-soft border border-hairline hover:border-zinc-300 rounded-xl transition-all">
-                              <div className="flex items-center gap-3 min-w-0">
-                                <div className="p-2.5 bg-indigo-50 border border-indigo-100 rounded-xl text-indigo-600 group-hover:bg-indigo-100 transition-colors">
-                                  <FileText className="w-4 h-4" />
-                                </div>
-                                <div className="min-w-0">
-                                  <p className="text-xs font-semibold text-ink truncate">Lecture Slides</p>
-                                  <p className="text-[10px] text-mute font-mono mt-0.5">presentation-deck.pdf</p>
-                                </div>
-                              </div>
-                              <ExternalLink className="w-3.5 h-3.5 text-mute group-hover:text-body transition-colors shrink-0" />
-                            </a>
-                          </div>
-                        </div>
-                      )}
-
-                      {activeTab === 'notes' && (
-                        <div className="bg-white border border-hairline rounded-xl p-6 space-y-4 vercel-card-shadow">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h3 className="text-sm font-bold text-ink flex items-center gap-2">
-                                <Sparkles className="w-4 h-4 text-indigo-500" /> Notebook
-                              </h3>
-                              <p className="text-xs text-mute mt-1">Notes are saved locally per lesson.</p>
-                            </div>
-                            <div className="shrink-0">
-                              {noteSavedState === 'saving' && (
-                                <span className="text-[10px] font-semibold text-mute flex items-center gap-1.5">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" /> Saving...
-                                </span>
-                              )}
-                              {noteSavedState === 'saved' && (
-                                <span className="text-[10px] font-semibold text-emerald-600 flex items-center gap-1">
-                                  <Check className="w-3 h-3" /> Saved
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <textarea
-                            value={noteContent}
-                            onChange={(e) => handleNoteContentChange(e.target.value)}
-                            placeholder="Write your notes here..."
-                            className="w-full min-h-[160px] bg-canvas-soft border border-hairline hover:border-zinc-300 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 focus:outline-none rounded-xl p-4 text-xs leading-relaxed text-ink placeholder-mute transition-all resize-none"
-                          />
-                        </div>
-                      )}
-                    </div>
+                  {/* Lesson Overview (details admin added) */}
+                  <div className="bg-white border border-hairline rounded-xl p-6 space-y-3 vercel-card-shadow">
+                    <span className="text-[9px] font-bold font-mono text-mute uppercase tracking-widest block">Description</span>
+                    <p className="text-body text-sm leading-relaxed whitespace-pre-line">
+                      {currentLesson.description || 'No description for this lesson yet.'}
+                    </p>
                   </div>
                 </div>
               </div>

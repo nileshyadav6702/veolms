@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { User } from '../models/User';
+import { Session } from '../models/Session';
 import { signToken } from '../services/jwt.service';
 
 const signupSchema = z.object({
@@ -13,6 +14,7 @@ const signupSchema = z.object({
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
+  sessionIdToRevoke: z.string().optional(),
 });
 
 export async function signup(req: Request, res: Response): Promise<void> {
@@ -24,8 +26,25 @@ export async function signup(req: Request, res: Response): Promise<void> {
       return;
     }
     const passwordHash = await bcrypt.hash(password, 12);
-    const user = await User.create({ name, email, passwordHash, role: 'student' });
-    const token = signToken({ id: user._id.toString(), email: user.email, role: user.role });
+    const user = await User.create({ name, email, passwordHash, role: 'student', lastLogin: new Date() });
+    
+    // Create initial session for the signup
+    const userAgent = req.headers['user-agent'] || 'Unknown Device';
+    const ip = req.ip || req.socket.remoteAddress || 'Unknown IP';
+    const session = await Session.create({
+      userId: user._id,
+      deviceInfo: userAgent,
+      ipAddress: ip,
+      lastActive: new Date()
+    });
+
+    const token = signToken({ 
+      id: user._id.toString(), 
+      email: user.email, 
+      role: user.role,
+      sessionId: session._id.toString() 
+    });
+
     res.status(201).json({
       success: true,
       token,
@@ -42,7 +61,7 @@ export async function signup(req: Request, res: Response): Promise<void> {
 
 export async function login(req: Request, res: Response): Promise<void> {
   try {
-    const { email, password } = loginSchema.parse(req.body);
+    const { email, password, sessionIdToRevoke } = loginSchema.parse(req.body);
     const user = await User.findOne({ email });
     if (!user) {
       res.status(401).json({ success: false, message: 'Invalid credentials' });
@@ -53,7 +72,50 @@ export async function login(req: Request, res: Response): Promise<void> {
       res.status(401).json({ success: false, message: 'Invalid credentials' });
       return;
     }
-    const token = signToken({ id: user._id.toString(), email: user.email, role: user.role });
+
+    // If requested to revoke a specific session
+    if (sessionIdToRevoke) {
+      await Session.findOneAndDelete({ _id: sessionIdToRevoke, userId: user._id });
+    }
+
+    // Stateful authentication - check concurrent devices
+    const activeSessions = await Session.find({ userId: user._id }).sort({ lastActive: -1 });
+    if (activeSessions.length >= 2) {
+      res.status(409).json({
+        success: false,
+        code: 'DEVICE_LIMIT_REACHED',
+        message: 'Maximum device limit reached (2). Choose an active session to terminate and log in.',
+        sessions: activeSessions.map(s => ({
+          id: s._id,
+          deviceInfo: s.deviceInfo,
+          ipAddress: s.ipAddress,
+          lastActive: s.lastActive
+        }))
+      });
+      return;
+    }
+
+    // Create session record
+    const userAgent = req.headers['user-agent'] || 'Unknown Device';
+    const ip = req.ip || req.socket.remoteAddress || 'Unknown IP';
+    const session = await Session.create({
+      userId: user._id,
+      deviceInfo: userAgent,
+      ipAddress: ip,
+      lastActive: new Date()
+    });
+
+    // Update user's last login
+    user.lastLogin = new Date();
+    await user.save();
+
+    const token = signToken({ 
+      id: user._id.toString(), 
+      email: user.email, 
+      role: user.role,
+      sessionId: session._id.toString() 
+    });
+
     res.json({
       success: true,
       token,
@@ -68,9 +130,16 @@ export async function login(req: Request, res: Response): Promise<void> {
   }
 }
 
-export async function logout(_req: Request, res: Response): Promise<void> {
-  // JWT is stateless — client must delete the token. This endpoint signals success.
-  res.json({ success: true, message: 'Logged out successfully' });
+export async function logout(req: Request, res: Response): Promise<void> {
+  try {
+    // Delete session from DB
+    if (req.user?.sessionId) {
+      await Session.findByIdAndDelete(req.user.sessionId);
+    }
+    res.json({ success: true, message: 'Logged out successfully' });
+  } catch {
+    res.status(500).json({ success: false, message: 'Server error during logout' });
+  }
 }
 
 export async function me(req: Request, res: Response): Promise<void> {

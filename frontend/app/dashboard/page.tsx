@@ -237,15 +237,15 @@ export default function StudentDashboardPage() {
                   <Card key={enroll._id} padding="none" className="overflow-hidden border border-hairline bg-white shadow-sm hover:shadow-md hover:border-zinc-300 hover:scale-[1.002] transition-all duration-300">
                     <div className="flex flex-col sm:flex-row">
                       {/* Compact Image/Gradient Banner */}
-                      <div className={`sm:w-48 aspect-video sm:aspect-auto bg-gradient-to-br ${grad} shrink-0 relative overflow-hidden`}>
+                      <div className={`w-full sm:w-60 md:w-64 aspect-video sm:aspect-auto bg-gradient-to-br ${grad} shrink-0 relative overflow-hidden`}>
                         {course.thumbnail ? (
                           <img
                             src={course.thumbnail}
                             alt={course.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center">
+                          <div className="absolute inset-0 flex items-center justify-center">
                             <BookOpen className="w-10 h-10 text-white/30" />
                           </div>
                         )}

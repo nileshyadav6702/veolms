@@ -28,7 +28,11 @@ async function throwIfError(res: Response) {
         errorMsg += `:\n${details}`
       }
     }
-    throw new Error(errorMsg)
+    const error = new Error(errorMsg) as any
+    error.status = res.status
+    error.code = (data as any).code
+    error.sessions = (data as any).sessions
+    throw error
   }
   return res.json()
 }

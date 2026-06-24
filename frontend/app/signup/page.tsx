@@ -3,7 +3,7 @@
 import { useState, Suspense, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Mail, Lock, User, BookOpen, AlertCircle, Sparkles } from 'lucide-react'
+import { Mail, Lock, User, AlertCircle, Sparkles } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Card from '@/components/ui/Card'
@@ -70,9 +70,7 @@ function SignupForm() {
     <div className="w-full max-w-md space-y-6">
       <div className="text-center md:text-left mb-6">
         <Link href="/" className="inline-flex items-center gap-2.5 mb-6">
-          <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center shadow-sm">
-            <BookOpen className="w-4 h-4 text-white" />
-          </div>
+          <img src="/favicon.svg" alt="VeoLMS Logo" className="w-9 h-9 object-contain" />
           <span className="text-lg font-bold tracking-tight text-primary">VeoLMS Workspace</span>
         </Link>
         <h2 className="text-2xl font-bold text-primary tracking-tight">Create your account.</h2>
@@ -152,9 +150,7 @@ export default function SignupPage() {
       {/* Left Column: Stark atmosphere panel (Desktop only) */}
       <div className="hidden lg:flex lg:w-1/2 bg-zinc-950 vercel-mesh-gradient border-r border-zinc-800 text-white flex-col justify-between p-12 relative overflow-hidden select-none">
         <div className="flex items-center gap-2.5 z-10">
-          <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center border border-white/10">
-            <BookOpen className="w-4 h-4 text-white" />
-          </div>
+          <img src="/favicon.svg" alt="VeoLMS Logo" className="w-8 h-8 object-contain" />
           <span className="font-bold tracking-tight text-sm">VeoLMS Cloud</span>
         </div>
 
@@ -172,7 +168,7 @@ export default function SignupPage() {
 
         {/* Small bottom footer credentials */}
         <div className="z-10 flex items-center justify-between text-[10px] font-mono text-zinc-500 font-bold uppercase tracking-wider">
-          <span>Enterprise Console v2.0</span>
+          <span>VeoLMS Console v2.0</span>
           <span>© 2026 VeoLMS</span>
         </div>
       </div>

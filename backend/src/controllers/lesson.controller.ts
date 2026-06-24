@@ -1,9 +1,10 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
+import path from 'path';
 import { Lesson } from '../models/Lesson';
 import { Course } from '../models/Course';
 import { Enrollment } from '../models/Enrollment';
-import { getPresignedGetUrl, deleteObject } from '../services/r2.service';
+import { getPresignedGetUrl, deleteObject, getObjectStream } from '../services/r2.service';
 
 const lessonSchema = z.object({
   courseId: z.string().min(1),
@@ -73,19 +74,118 @@ export async function getLessonStreamUrl(req: Request, res: Response): Promise<v
       }
     }
 
-    if (lesson.status !== 'ready') {
+    if (lesson.status !== 'ready' && !lesson.videoKey) {
       res.status(422).json({ success: false, message: 'Video is still processing. Try again later.' });
       return;
     }
 
-    const key = lesson.hlsKey || lesson.videoKey;
-    // Short-lived URL: 2 hours for video streaming
-    const url = await getPresignedGetUrl(key, 7200);
-    res.json({ success: true, url, isHls: !!lesson.hlsKey });
+    // Extract current token from request to construct the proxy HLS URL
+    const authHeader = req.headers.authorization;
+    let token = '';
+    if (authHeader?.startsWith('Bearer ')) {
+      token = authHeader.split(' ')[1];
+    } else if (typeof req.query.token === 'string') {
+      token = req.query.token;
+    }
+
+    if (lesson.hlsKey) {
+      // If HLS playlist is ready, route requests through our server proxy to handle relative TS segment resolution securely
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const url = `${baseUrl}/api/lessons/${lesson._id}/hls/master.m3u8?token=${token}`;
+      res.json({ success: true, url, isHls: true });
+      return;
+    }
+
+    if (!lesson.videoKey) {
+      res.status(422).json({ success: false, message: 'No video file available for streaming.' });
+      return;
+    }
+
+    // Fallback to direct presigned URL for raw mp4 video
+    const url = await getPresignedGetUrl(lesson.videoKey, 7200);
+    res.json({ success: true, url, isHls: false });
   } catch {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 }
+
+export async function getLessonHlsFile(req: Request, res: Response): Promise<void> {
+  try {
+    const lesson = await Lesson.findById(req.params.id);
+    if (!lesson) {
+      res.status(404).json({ success: false, message: 'Lesson not found' });
+      return;
+    }
+
+    // Preview lessons are accessible to all authenticated users
+    if (!lesson.isPreview) {
+      if (!req.user) {
+        res.status(401).json({ success: false, message: 'Authentication required' });
+        return;
+      }
+      if (req.user.role !== 'admin') {
+        const enrollment = await Enrollment.findOne({
+          userId: req.user.id,
+          courseId: lesson.courseId,
+          paymentStatus: 'paid',
+        });
+        if (!enrollment) {
+          res.status(403).json({ success: false, message: 'Not enrolled in this course' });
+          return;
+        }
+      }
+    }
+
+    if (!lesson.hlsKey) {
+      res.status(404).json({ success: false, message: 'HLS stream not found' });
+      return;
+    }
+
+    const relativePath = req.params[0]; // Captured by Express wildcard router ('*')
+    if (!relativePath) {
+      res.status(400).json({ success: false, message: 'Filename is required' });
+      return;
+    }
+
+    // Resolve target R2 key dynamically
+    const baseDir = path.dirname(lesson.hlsKey);
+    const r2Key = path.posix.join(baseDir, relativePath);
+
+    const { stream, contentType, contentLength } = await getObjectStream(r2Key);
+
+    // Set correct Content-Type for HLS formats
+    if (contentType) {
+      res.setHeader('Content-Type', contentType);
+    } else {
+      if (relativePath.endsWith('.m3u8')) {
+        res.setHeader('Content-Type', 'application/x-mpegURL');
+      } else if (relativePath.endsWith('.ts')) {
+        res.setHeader('Content-Type', 'video/MP2T');
+      }
+    }
+
+    if (contentLength) {
+      res.setHeader('Content-Length', contentLength);
+    }
+
+    // Setup cache control: Cache chunks (.ts) heavily, do not cache index playlist (.m3u8)
+    if (relativePath.endsWith('.ts')) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    } else {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    }
+
+    stream.pipe(res);
+  } catch (err: any) {
+    if (err.name === 'NoSuchKey' || err.$metadata?.httpStatusCode === 404) {
+      res.status(404).json({ success: false, message: 'File not found in storage' });
+    } else {
+      console.error('Error fetching HLS file:', err);
+      res.status(500).json({ success: false, message: 'Failed to retrieve streaming file' });
+    }
+  }
+}
+
 
 export async function createLesson(req: Request, res: Response): Promise<void> {
   try {

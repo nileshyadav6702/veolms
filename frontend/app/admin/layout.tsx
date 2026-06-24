@@ -6,7 +6,6 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import {
-  Shield,
   LayoutDashboard,
   BookOpen,
   Users,
@@ -72,9 +71,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Mobile Navbar Header */}
         <div className="md:hidden fixed top-0 inset-x-0 h-14 bg-white border-b border-hairline flex items-center justify-between px-4 z-40">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center">
-              <Shield className="w-4 h-4 text-white" />
-            </div>
+            <img src="/favicon.svg" alt="VeoLMS Logo" className="w-7 h-7 object-contain" />
             <span className="font-bold text-sm tracking-tight text-primary">VeoLMS Admin</span>
           </Link>
           <button
@@ -105,16 +102,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {/* Header Brand Logo (Desktop only) */}
             <div className={`hidden md:flex items-center ${isCollapsed ? 'flex-col gap-4 py-5' : 'justify-between px-6 py-5'} border-b border-hairline`}>
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shrink-0">
-                  <Shield className="w-4 h-4 text-white" />
-                </div>
+                <img src="/favicon.svg" alt="VeoLMS Logo" className="w-8 h-8 object-contain shrink-0" />
                 {!isCollapsed && (
                   <div>
                     <h1 className="font-bold text-sm text-primary tracking-tight leading-none">
-                      VeoLMS Console
+                      VeoLMS Admin
                     </h1>
                     <span className="text-[10px] font-mono text-mute font-bold uppercase tracking-wider mt-0.5 inline-block">
-                      Enterprise v2.0
+                      Console v2.0
                     </span>
                   </div>
                 )}

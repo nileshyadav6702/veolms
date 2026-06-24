@@ -20,6 +20,7 @@ import Badge from '@/components/ui/Badge'
 import Card from '@/components/ui/Card'
 import Spinner from '@/components/ui/Spinner'
 import CurriculumList, { Lesson, Section } from '@/components/courses/CurriculumList'
+import VideoPlayer from '@/components/video/VideoPlayer'
 import { api } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
 import Script from 'next/script'
@@ -223,8 +224,62 @@ export default function DashboardCourseDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center py-20 w-full">
-        <Spinner className="w-8 h-8" />
+      <div className="w-full flex-1 bg-gray-50">
+        {/* Skeleton Hero Header */}
+        <section className="bg-white border-b border-gray-100">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <div className="h-4 bg-gray-200 rounded w-28 mb-6 animate-pulse" />
+            
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-start">
+              {/* Left Column Skeleton */}
+              <div className="lg:col-span-2 space-y-4">
+                <div className="h-5 bg-gray-200 rounded w-24 mb-2 animate-pulse" />
+                <div className="h-9 bg-gray-200 rounded w-3/4 animate-pulse" />
+                <div className="h-9 bg-gray-200 rounded w-1/2 animate-pulse" />
+                <div className="space-y-2 pt-4">
+                  <div className="h-4 bg-gray-200 rounded w-full animate-pulse" />
+                  <div className="h-4 bg-gray-200 rounded w-5/6 animate-pulse" />
+                </div>
+                <div className="flex flex-wrap items-center gap-6 pt-6">
+                  <div className="h-5 bg-gray-200 rounded w-32 animate-pulse" />
+                  <div className="h-5 bg-gray-200 rounded w-24 animate-pulse" />
+                  <div className="h-5 bg-gray-200 rounded w-28 animate-pulse" />
+                </div>
+              </div>
+              
+              {/* Right Column Skeleton (Price Card) */}
+              <div className="lg:col-span-1 bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm">
+                <div className="aspect-video bg-gray-200 animate-pulse" />
+                <div className="p-6 space-y-6">
+                  <div className="space-y-2">
+                    <div className="h-8 bg-gray-200 rounded w-1/3 animate-pulse" />
+                    <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse" />
+                  </div>
+                  <div className="h-10 bg-gray-200 rounded-lg w-full animate-pulse" />
+                  <div className="space-y-3 pt-4 border-t border-gray-100">
+                    <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse" />
+                    <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse" />
+                    <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Skeleton Bottom Content */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+            <div className="lg:col-span-2 space-y-8">
+              <div className="space-y-3">
+                <div className="h-6 bg-gray-200 rounded w-1/4 animate-pulse" />
+                <div className="h-12 bg-gray-200 rounded w-full animate-pulse" />
+                <div className="h-12 bg-gray-200 rounded w-full animate-pulse" />
+                <div className="h-12 bg-gray-200 rounded w-full animate-pulse" />
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     )
   }
@@ -545,45 +600,42 @@ export default function DashboardCourseDetailPage() {
 
       {/* Free Preview Video Modal */}
       {previewLesson && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white rounded-xl overflow-hidden shadow-2xl border border-gray-100 w-full max-w-3xl relative">
-            <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50">
-              <div>
-                <span className="font-mono text-[10px] text-indigo-600 font-bold uppercase tracking-wider">
-                  Free Preview
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/70 backdrop-blur-md animate-fade-in">
+          <div className="bg-zinc-950 border border-zinc-800/80 rounded-2xl overflow-hidden w-full max-w-3xl relative shadow-[0_32px_64px_-16px_rgba(0,0,0,0.8)] animate-scale-up">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4.5 border-b border-zinc-900 bg-zinc-900/60 backdrop-blur-sm">
+              <div className="flex flex-col">
+                <span className="font-mono text-[9px] text-indigo-400 font-bold uppercase tracking-widest mb-0.5">
+                  Free Preview Lesson
                 </span>
-                <h3 className="font-bold text-gray-900 text-sm sm:text-base truncate max-w-md">
+                <h3 className="font-bold text-zinc-100 text-sm sm:text-base truncate max-w-[280px] sm:max-w-md">
                   {previewLesson.title}
                 </h3>
               </div>
               <button
                 onClick={closePreview}
-                className="p-1 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                className="p-1.5 rounded-full bg-zinc-800/80 hover:bg-zinc-700/80 text-zinc-400 hover:text-zinc-100 border border-zinc-800 transition-all duration-300 hover:rotate-90 cursor-pointer"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="aspect-video bg-black relative flex items-center justify-center text-white">
+            {/* Video Box */}
+            <div className="aspect-video bg-zinc-950 relative flex items-center justify-center text-zinc-400">
               {previewLoading ? (
-                <div className="text-center space-y-3">
-                  <Spinner className="w-8 h-8 text-indigo-600 mx-auto" />
-                  <p className="text-xs text-gray-400">Loading stream url...</p>
+                <div className="text-center space-y-4">
+                  <Spinner className="w-8 h-8 text-indigo-500 mx-auto" />
+                  <p className="text-xs text-zinc-500 font-medium">Resolving secure HLS stream...</p>
                 </div>
               ) : previewUrl ? (
-                <video
-                  src={
-                    previewUrl.includes('localhost:9000')
-                      ? 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
-                      : previewUrl
-                  }
+                <VideoPlayer
+                  src={previewUrl}
                   className="w-full h-full"
-                  controls
                   autoPlay
                 />
               ) : (
-                <div className="text-center">
-                  <p className="text-sm text-gray-400">Unable to load stream.</p>
+                <div className="text-center space-y-2">
+                  <p className="text-sm text-zinc-500">Failed to load video stream.</p>
                 </div>
               )}
             </div>

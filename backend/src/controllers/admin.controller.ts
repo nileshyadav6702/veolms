@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { User } from '../models/User';
 import { Course } from '../models/Course';
 import { Enrollment } from '../models/Enrollment';
+import { Session } from '../models/Session';
+import { Progress } from '../models/Progress';
 import { formatThumbnailUrl } from './course.controller';
 
 export async function getDashboard(req: Request, res: Response): Promise<void> {
@@ -146,8 +148,173 @@ export async function getStudents(req: Request, res: Response): Promise<void> {
       User.find({ role: 'student' }).select('-passwordHash').skip(skip).limit(limit).sort({ createdAt: -1 }),
       User.countDocuments({ role: 'student' }),
     ]);
-    res.json({ success: true, students, total, page, totalPages: Math.ceil(total / limit) });
+
+    const studentsWithSessions = await Promise.all(
+      students.map(async (student) => {
+        const sessionCount = await Session.countDocuments({ userId: student._id });
+        return {
+          ...student.toObject(),
+          sessionCount,
+        };
+      })
+    );
+
+    res.json({ success: true, students: studentsWithSessions, total, page, totalPages: Math.ceil(total / limit) });
   } catch {
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+}
+
+export async function getStudentDetail(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    const student = await User.findOne({ _id: id, role: 'student' }).select('-passwordHash');
+    if (!student) {
+      res.status(404).json({ success: false, message: 'Student not found' });
+      return;
+    }
+
+    const sessions = await Session.find({ userId: student._id }).sort({ lastActive: -1 });
+
+    const enrollments = await Enrollment.find({ userId: student._id })
+      .populate('courseId', 'title description price thumbnail')
+      .sort({ enrolledAt: -1 });
+
+    const allCourses = await Course.find().select('title price thumbnail description');
+
+    const formattedEnrollments = enrollments.map(e => {
+      const doc = e.toObject() as any;
+      if (doc.courseId) {
+        doc.courseId.thumbnail = formatThumbnailUrl(doc.courseId.thumbnail, req);
+      }
+      return doc;
+    });
+
+    const formattedAllCourses = allCourses.map(c => {
+      const doc = c.toObject();
+      doc.thumbnail = formatThumbnailUrl(doc.thumbnail, req);
+      return doc;
+    });
+
+    res.json({
+      success: true,
+      student,
+      sessions,
+      enrollments: formattedEnrollments,
+      allCourses: formattedAllCourses
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+}
+
+export async function grantCourseAccess(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    const { courseId } = req.body;
+
+    const student = await User.findOne({ _id: id, role: 'student' });
+    if (!student) {
+      res.status(404).json({ success: false, message: 'Student not found' });
+      return;
+    }
+
+    const course = await Course.findById(courseId);
+    if (!course) {
+      res.status(404).json({ success: false, message: 'Course not found' });
+      return;
+    }
+
+    let enrollment = await Enrollment.findOne({ userId: student._id, courseId: course._id });
+    if (enrollment) {
+      enrollment.paymentStatus = 'paid';
+      enrollment.enrolledAt = new Date();
+      await enrollment.save();
+    } else {
+      enrollment = await Enrollment.create({
+        userId: student._id,
+        courseId: course._id,
+        paymentStatus: 'paid',
+        enrolledAt: new Date()
+      });
+    }
+
+    res.json({ success: true, message: 'Access granted successfully', enrollment });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+}
+
+export async function revokeCourseAccess(req: Request, res: Response): Promise<void> {
+  try {
+    const { id, courseId } = req.params;
+
+    const student = await User.findOne({ _id: id, role: 'student' });
+    if (!student) {
+      res.status(404).json({ success: false, message: 'Student not found' });
+      return;
+    }
+
+    const result = await Enrollment.deleteOne({ userId: student._id, courseId });
+    await Progress.deleteMany({ userId: student._id, courseId });
+
+    if (result.deletedCount === 0) {
+      res.status(404).json({ success: false, message: 'Enrollment not found' });
+      return;
+    }
+
+    res.json({ success: true, message: 'Access revoked successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+}
+
+export async function deleteStudent(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+
+    const student = await User.findOne({ _id: id, role: 'student' });
+    if (!student) {
+      res.status(404).json({ success: false, message: 'Student not found' });
+      return;
+    }
+
+    await Promise.all([
+      User.deleteOne({ _id: student._id }),
+      Enrollment.deleteMany({ userId: student._id }),
+      Progress.deleteMany({ userId: student._id }),
+      Session.deleteMany({ userId: student._id })
+    ]);
+
+    res.json({ success: true, message: 'Student deleted permanently from system' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+}
+
+export async function revokeStudentSession(req: Request, res: Response): Promise<void> {
+  try {
+    const { id, sessionId } = req.params;
+
+    const student = await User.findOne({ _id: id, role: 'student' });
+    if (!student) {
+      res.status(404).json({ success: false, message: 'Student not found' });
+      return;
+    }
+
+    const session = await Session.findOneAndDelete({ _id: sessionId, userId: student._id });
+    if (!session) {
+      res.status(404).json({ success: false, message: 'Session not found' });
+      return;
+    }
+
+    res.json({ success: true, message: 'Session revoked successfully' });
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 }
