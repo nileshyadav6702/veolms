@@ -40,7 +40,7 @@ export default function VideoPlayer({
     }
   }
 
-  const handleTimeUpdate = (event: any) => {
+  const handleTimeUpdate = (event: { detail: { currentTime: number; duration: number } }) => {
     if (onProgress) {
       const currentTime = event.detail.currentTime
       const duration = event.detail.duration
@@ -83,3 +83,5 @@ export default function VideoPlayer({
     </div>
   )
 }
+
+

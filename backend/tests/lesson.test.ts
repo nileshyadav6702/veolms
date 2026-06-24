@@ -27,6 +27,7 @@ import { Course } from '../src/models/Course';
 import { Lesson } from '../src/models/Lesson';
 import { Enrollment } from '../src/models/Enrollment';
 import { signToken } from '../src/services/jwt.service';
+import { Session } from '../src/models/Session';
 
 describe('Lesson Streaming & HLS Routes', () => {
   let adminToken: string;
@@ -38,13 +39,16 @@ describe('Lesson Streaming & HLS Routes', () => {
   beforeEach(async () => {
     // Create Users
     const admin = await User.create({ name: 'Admin', email: 'admin@test.com', passwordHash: 'x', role: 'admin' });
-    adminToken = signToken({ id: admin._id.toString(), email: admin.email, role: admin.role });
+    const adminSession = await Session.create({ userId: admin._id, deviceInfo: 'Test Admin Device', ipAddress: '127.0.0.1' });
+    adminToken = signToken({ id: admin._id.toString(), email: admin.email, role: admin.role, sessionId: adminSession._id.toString() });
 
     const student = await User.create({ name: 'Student', email: 'student@test.com', passwordHash: 'x', role: 'student' });
-    studentToken = signToken({ id: student._id.toString(), email: student.email, role: student.role });
+    const studentSession = await Session.create({ userId: student._id, deviceInfo: 'Test Student Device', ipAddress: '127.0.0.1' });
+    studentToken = signToken({ id: student._id.toString(), email: student.email, role: student.role, sessionId: studentSession._id.toString() });
 
     const unenrolled = await User.create({ name: 'Unenrolled', email: 'unenrolled@test.com', passwordHash: 'x', role: 'student' });
-    unenrolledStudentToken = signToken({ id: unenrolled._id.toString(), email: unenrolled.email, role: unenrolled.role });
+    const unenrolledSession = await Session.create({ userId: unenrolled._id, deviceInfo: 'Test Unenrolled Device', ipAddress: '127.0.0.1' });
+    unenrolledStudentToken = signToken({ id: unenrolled._id.toString(), email: unenrolled.email, role: unenrolled.role, sessionId: unenrolledSession._id.toString() });
 
     // Create Course
     const course = await Course.create({

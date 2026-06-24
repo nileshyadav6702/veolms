@@ -6,6 +6,7 @@ import { Course } from '../models/Course';
 import { Enrollment } from '../models/Enrollment';
 import { getPresignedGetUrl, deleteObject, getObjectStream } from '../services/r2.service';
 
+
 const lessonSchema = z.object({
   courseId: z.string().min(1),
   sectionId: z.string().min(1),

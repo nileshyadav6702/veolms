@@ -16,6 +16,21 @@ import { User } from '../src/models/User';
 import { Course } from '../src/models/Course';
 import bcrypt from 'bcryptjs';
 import { signToken } from '../src/services/jwt.service';
+import { Session } from '../src/models/Session';
+
+async function generateToken(user: any) {
+  const session = await Session.create({
+    userId: user._id,
+    deviceInfo: 'Test Payment Device',
+    ipAddress: '127.0.0.1',
+  });
+  return signToken({
+    id: user._id.toString(),
+    email: user.email,
+    role: user.role,
+    sessionId: session._id.toString(),
+  });
+}
 
 describe('Payment Routes', () => {
   describe('POST /api/payments/create-order', () => {
@@ -26,7 +41,7 @@ describe('Payment Routes', () => {
 
     it('returns 404 for non-existent course', async () => {
       const user = await User.create({ name: 'S', email: 's@s.com', passwordHash: await bcrypt.hash('pass', 12), role: 'student' });
-      const token = signToken({ id: user._id.toString(), email: user.email, role: user.role });
+      const token = await generateToken(user);
       const res = await request(app)
         .post('/api/payments/create-order')
         .set('Authorization', `Bearer ${token}`)
@@ -36,7 +51,7 @@ describe('Payment Routes', () => {
 
     it('returns 200 with order for published course', async () => {
       const user = await User.create({ name: 'S', email: 's@s.com', passwordHash: await bcrypt.hash('pass', 12), role: 'student' });
-      const token = signToken({ id: user._id.toString(), email: user.email, role: user.role });
+      const token = await generateToken(user);
       const course = await Course.create({
         title: 'Test Course',
         slug: 'test-course',
@@ -61,7 +76,7 @@ describe('Payment Routes', () => {
 
     it('returns 404 for unpublished course', async () => {
       const user = await User.create({ name: 'S', email: 's@s.com', passwordHash: await bcrypt.hash('pass', 12), role: 'student' });
-      const token = signToken({ id: user._id.toString(), email: user.email, role: user.role });
+      const token = await generateToken(user);
       const course = await Course.create({
         title: 'Unpublished Course',
         slug: 'unpublished-course',
@@ -90,7 +105,7 @@ describe('Payment Routes', () => {
 
     it('returns empty enrollments for new user', async () => {
       const user = await User.create({ name: 'S', email: 's@s.com', passwordHash: await bcrypt.hash('pass', 12), role: 'student' });
-      const token = signToken({ id: user._id.toString(), email: user.email, role: user.role });
+      const token = await generateToken(user);
       const res = await request(app)
         .get('/api/enrollments')
         .set('Authorization', `Bearer ${token}`);
@@ -108,7 +123,7 @@ describe('Payment Routes', () => {
 
     it('returns enrolled false for unenrolled course', async () => {
       const user = await User.create({ name: 'S', email: 's@s.com', passwordHash: await bcrypt.hash('pass', 12), role: 'student' });
-      const token = signToken({ id: user._id.toString(), email: user.email, role: user.role });
+      const token = await generateToken(user);
       const res = await request(app)
         .get('/api/enrollments/507f1f77bcf86cd799439011')
         .set('Authorization', `Bearer ${token}`);
@@ -121,7 +136,7 @@ describe('Payment Routes', () => {
     it('verifies payment and marks enrollment as paid', async () => {
       // 1. Create user + course
       const user = await User.create({ name: 'S', email: 'sv@sv.com', passwordHash: await bcrypt.hash('pass', 12), role: 'student' });
-      const token = signToken({ id: user._id.toString(), email: user.email, role: user.role });
+      const token = await generateToken(user);
       const admin = await User.create({ name: 'A', email: 'av@av.com', passwordHash: 'x', role: 'admin' });
       const course = await Course.create({ title: 'JS', slug: 'js-v', thumbnail: 'https://x.com/t.jpg', description: 'desc', shortDescription: 'JS', instructor: 'I', price: 999, isPublished: true, createdBy: admin._id });
       // 2. Create pending enrollment

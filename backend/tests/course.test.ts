@@ -10,6 +10,7 @@ import { User } from '../src/models/User';
 import { Course } from '../src/models/Course';
 import bcrypt from 'bcryptjs';
 import { signToken } from '../src/services/jwt.service';
+import { Session } from '../src/models/Session';
 
 async function createAdmin() {
   const user = await User.create({
@@ -18,7 +19,12 @@ async function createAdmin() {
     passwordHash: await bcrypt.hash('Password123!', 12),
     role: 'admin',
   });
-  return signToken({ id: user._id.toString(), email: user.email, role: user.role });
+  const session = await Session.create({
+    userId: user._id,
+    deviceInfo: 'Test Admin Device',
+    ipAddress: '127.0.0.1',
+  });
+  return signToken({ id: user._id.toString(), email: user.email, role: user.role, sessionId: session._id.toString() });
 }
 
 async function createStudent() {
@@ -28,7 +34,12 @@ async function createStudent() {
     passwordHash: await bcrypt.hash('Password123!', 12),
     role: 'student',
   });
-  return signToken({ id: user._id.toString(), email: user.email, role: user.role });
+  const session = await Session.create({
+    userId: user._id,
+    deviceInfo: 'Test Student Device',
+    ipAddress: '127.0.0.1',
+  });
+  return signToken({ id: user._id.toString(), email: user.email, role: user.role, sessionId: session._id.toString() });
 }
 
 describe('Course Routes', () => {

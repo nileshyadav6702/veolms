@@ -6,6 +6,7 @@ import { Lesson } from '../models/Lesson';
 import { config } from '../config/env';
 
 
+
 const thumbnailSchema = z.object({
   fileName: z.string().min(1),
   contentType: z.enum(['image/jpeg', 'image/png', 'image/webp']),
