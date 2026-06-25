@@ -32,7 +32,7 @@ app.use(
       ) {
         return callback(null, true)
       }
-      if (origin === config.FRONTEND_URL) {
+      if (origin === config.FRONTEND_URL || origin.endsWith('.vercel.app')) {
         return callback(null, true)
       }
       return callback(new Error('Not allowed by CORS'))
