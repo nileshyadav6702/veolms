@@ -7,6 +7,11 @@ export interface ILesson extends Document {
   description?: string;
   videoKey: string;
   hlsKey?: string;
+  subtitles?: Array<{
+    lang: string;
+    label: string;
+    vttKey: string;
+  }>;
   duration: number;
   order: number;
   isPreview: boolean;
@@ -23,6 +28,13 @@ const lessonSchema = new Schema<ILesson>(
     description: { type: String },
     videoKey: { type: String, required: true },
     hlsKey: { type: String },
+    subtitles: [
+      {
+        lang: { type: String, required: true },
+        label: { type: String, required: true },
+        vttKey: { type: String, required: true },
+      },
+    ],
     duration: { type: Number, default: 0 },
     order: { type: Number, required: true },
     isPreview: { type: Boolean, default: false },

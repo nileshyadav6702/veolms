@@ -93,7 +93,14 @@ export async function getLessonStreamUrl(req: Request, res: Response): Promise<v
       // If HLS playlist is ready, route requests through our server proxy to handle relative TS segment resolution securely
       const baseUrl = `${req.protocol}://${req.get('host')}`;
       const url = `${baseUrl}/api/lessons/${lesson._id}/hls/${token}/master.m3u8`;
-      res.json({ success: true, url, isHls: true });
+      
+      const subtitles = lesson.subtitles?.map(s => ({
+        lang: s.lang,
+        label: s.label,
+        url: `${baseUrl}/api/lessons/${lesson._id}/subtitles/${s.lang}`
+      })) || [];
+
+      res.json({ success: true, url, isHls: true, subtitles });
       return;
     }
 
@@ -322,5 +329,51 @@ export async function deleteLesson(req: Request, res: Response): Promise<void> {
     res.json({ success: true, message: 'Lesson deleted' });
   } catch {
     res.status(500).json({ success: false, message: 'Server error' });
+  }
+}
+
+export async function getLessonSubtitle(req: Request, res: Response): Promise<void> {
+  try {
+    const { id, lang } = req.params;
+    const lesson = await Lesson.findById(id);
+    if (!lesson) {
+      res.status(404).json({ success: false, message: 'Lesson not found' });
+      return;
+    }
+
+    // Preview lessons are accessible to all authenticated users
+    if (!lesson.isPreview) {
+      if (!req.user) {
+        res.status(401).json({ success: false, message: 'Authentication required' });
+        return;
+      }
+      if (req.user.role !== 'admin') {
+        const enrollment = await Enrollment.findOne({
+          userId: req.user.id,
+          courseId: lesson.courseId,
+          paymentStatus: 'paid',
+        });
+        if (!enrollment) {
+          res.status(403).json({ success: false, message: 'Not enrolled in this course' });
+          return;
+        }
+      }
+    }
+
+    const subtitle = lesson.subtitles?.find((s) => s.lang === lang);
+    if (!subtitle || !subtitle.vttKey) {
+      res.status(404).json({ success: false, message: 'Subtitles not found for this language' });
+      return;
+    }
+
+    const { stream, contentLength } = await getObjectStream(subtitle.vttKey);
+    res.setHeader('Content-Type', 'text/vtt');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    if (contentLength) {
+      res.setHeader('Content-Length', contentLength);
+    }
+    stream.pipe(res);
+  } catch {
+    res.status(500).json({ success: false, message: 'Server error retrieving subtitles' });
   }
 }

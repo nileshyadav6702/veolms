@@ -1,10 +1,15 @@
 # Use official slim Node.js image
 FROM node:18-slim
 
-# Install FFmpeg and clean up apt packages
+# Install FFmpeg, Python 3, and package manager dependencies
 RUN apt-get update && \
-    apt-get install -y ffmpeg && \
+    apt-get install -y ffmpeg python3 python3-pip python3-venv libgomp1 && \
     rm -rf /var/lib/apt/lists/*
+
+# Create virtual environment and install faster-whisper
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+RUN pip3 install --no-cache-dir faster-whisper
 
 # Set directory
 WORKDIR /usr/src/app

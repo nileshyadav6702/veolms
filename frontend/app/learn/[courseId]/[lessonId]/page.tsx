@@ -67,6 +67,7 @@ export default function LearnPage() {
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null)
   const [progressMap, setProgressMap] = useState<Record<string, ProgressRecord>>({})
   const [streamUrl, setStreamUrl] = useState<string | null>(null)
+  const [subtitles, setSubtitles] = useState<Array<{ lang: string; label: string; url: string }>>([])
   const [initialTime, setInitialTime] = useState(0)
 
   const [loading, setLoading] = useState(true)
@@ -155,8 +156,10 @@ export default function LearnPage() {
     try {
       setStreamLoading(true)
       setStreamUrl(null)
+      setSubtitles([])
       const data = await api.get(`/api/lessons/${currentLesson._id}/stream`)
       setStreamUrl(data.url)
+      setSubtitles(data.subtitles || [])
     } catch (err: any) {
       alert(err.message || 'Error streaming lesson video.')
     } finally {
@@ -312,6 +315,7 @@ export default function LearnPage() {
                 ) : streamUrl ? (
                   <VideoPlayer
                     src={streamUrl}
+                    subtitles={subtitles}
                     onProgress={handleProgress}
                     onEnded={handleVideoEnded}
                     initialTime={initialTime}

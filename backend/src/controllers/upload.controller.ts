@@ -88,10 +88,15 @@ export async function triggerTranscode(req: Request, res: Response): Promise<voi
 
 export async function updateLessonVideoKey(req: Request, res: Response): Promise<void> {
   try {
-    const { lessonId, hlsKey, status } = z.object({
+    const { lessonId, hlsKey, status, subtitles } = z.object({
       lessonId: z.string(),
       hlsKey: z.string(),
       status: z.enum(['ready', 'error']),
+      subtitles: z.array(z.object({
+        lang: z.string(),
+        label: z.string(),
+        vttKey: z.string(),
+      })).optional(),
     }).parse(req.body);
 
     // This endpoint is called by the Cloudflare Worker after transcoding
@@ -101,7 +106,11 @@ export async function updateLessonVideoKey(req: Request, res: Response): Promise
       return;
     }
 
-    await Lesson.findByIdAndUpdate(lessonId, { hlsKey, status });
+    await Lesson.findByIdAndUpdate(lessonId, { 
+      hlsKey, 
+      status, 
+      subtitles: subtitles || [],
+    });
     res.json({ success: true });
   } catch {
     res.status(500).json({ success: false, message: 'Server error' });

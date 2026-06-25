@@ -1,16 +1,23 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { MediaPlayer, MediaProvider, type MediaPlayerInstance } from '@vidstack/react'
+import { MediaPlayer, MediaProvider, Track, type MediaPlayerInstance } from '@vidstack/react'
 import { defaultLayoutIcons, DefaultVideoLayout } from '@vidstack/react/player/layouts/default'
 
 // Import Vidstack default styles
 import '@vidstack/react/player/styles/default/theme.css'
 import '@vidstack/react/player/styles/default/layouts/video.css'
 
+export interface SubtitleTrack {
+  lang: string
+  label: string
+  url: string
+}
+
 interface VideoPlayerProps {
   src: string
   type?: string
+  subtitles?: SubtitleTrack[]
   onProgress?: (currentTime: number, duration: number) => void
   onEnded?: () => void
   initialTime?: number
@@ -21,6 +28,7 @@ interface VideoPlayerProps {
 export default function VideoPlayer({
   src,
   type,
+  subtitles = [],
   onProgress,
   onEnded,
   initialTime = 0,
@@ -82,7 +90,17 @@ export default function VideoPlayer({
         playsInline
         autoplay={autoPlay}
       >
-        <MediaProvider className="w-full h-full object-contain" />
+        <MediaProvider className="w-full h-full object-contain">
+          {subtitles.map((track) => (
+            <Track
+              key={track.url}
+              src={track.url}
+              kind="subtitles"
+              label={track.label}
+              lang={track.lang}
+            />
+          ))}
+        </MediaProvider>
         <DefaultVideoLayout icons={defaultLayoutIcons} noAudioGain />
       </MediaPlayer>
     </div>

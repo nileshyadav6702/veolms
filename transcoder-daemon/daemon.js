@@ -24,6 +24,7 @@ const s3Client = new S3Client({
     accessKeyId: process.env.R2_ACCESS_KEY_ID,
     secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
   },
+  requestChecksumCalculation: 'WHEN_REQUIRED',
 });
 
 // Middleware to verify secret from Cloudflare Worker
@@ -77,29 +78,99 @@ app.post('/transcode', verifyWorker, async (req, res) => {
     // C. Execute FFmpeg Multi-Bitrate HLS encoding command
     console.log(`[Job ${lessonId}] Running FFmpeg multi-quality compression...`);
     
-    // Create stream subdirectories for FFmpeg to write segment chunks into
-    fs.mkdirSync(path.join(outputDir, 'stream_0'), { recursive: true });
-    fs.mkdirSync(path.join(outputDir, 'stream_1'), { recursive: true });
-    fs.mkdirSync(path.join(outputDir, 'stream_2'), { recursive: true });
-    fs.mkdirSync(path.join(outputDir, 'stream_3'), { recursive: true });
+    // Check if the input video file contains an audio stream
+    const hasAudio = await new Promise((resolve) => {
+      exec(`ffprobe -loglevel error -select_streams a -show_entries stream=codec_type -of csv=p=0 "${rawVideoPath}"`, (err, stdout) => {
+        if (err) {
+          console.warn(`[Job ${lessonId}] ffprobe failed to detect audio, assuming no audio:`, err);
+          resolve(false);
+        } else {
+          resolve(stdout.trim().includes('audio'));
+        }
+      });
+    });
+    console.log(`[Job ${lessonId}] Input video has audio stream: ${hasAudio}`);
 
-    const ffmpegCmd = `ffmpeg -y -i "${rawVideoPath}" \
-      -filter_complex "[0:v]split=4[v1][v2][v3][v4]; \
-                       [v1]scale=w=640:h=360[v1out]; \
-                       [v2]scale=w=854:h=480[v2out]; \
-                       [v3]scale=w=1280:h=720[v3out]; \
-                       [v4]scale=w=1920:h=1080[v4out]" \
-      -map "[v1out]" -map 0:a -c:v:0 libx264 -b:v:0 800k -maxrate:v:0 856k -bufsize:v:0 1200k \
-      -map "[v2out]" -map 0:a -c:v:1 libx264 -b:v:1 1400k -maxrate:v:1 1498k -bufsize:v:1 2100k \
-      -map "[v3out]" -map 0:a -c:v:2 libx264 -b:v:2 2800k -maxrate:v:2 2996k -bufsize:v:2 4200k \
-      -map "[v4out]" -map 0:a -c:v:3 libx264 -b:v:3 5000k -maxrate:v:3 5350k -bufsize:v:3 7500k \
-      -c:a aac -b:a:0 96k -b:a:1 128k -b:a:2 128k -b:a:3 192k \
-      -f hls \
-      -hls_time 6 \
-      -hls_playlist_type event \
-      -hls_segment_filename "${outputDir}/stream_%v/%03d.ts" \
-      -master_pl_name master.m3u8 \
-      "${outputDir}/stream_%v/index.m3u8"`;
+    // Detect the input video resolution to avoid upscaling
+    const dimensions = await new Promise((resolve) => {
+      exec(`ffprobe -loglevel error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 "${rawVideoPath}"`, (err, stdout) => {
+        if (err) {
+          console.warn(`[Job ${lessonId}] ffprobe failed to get dimensions, assuming 1920x1080:`, err);
+          resolve({ width: 1920, height: 1080 });
+        } else {
+          const parts = stdout.trim().split('x');
+          const width = parseInt(parts[0], 10) || 1920;
+          const height = parseInt(parts[1], 10) || 1080;
+          resolve({ width, height });
+        }
+      });
+    });
+    console.log(`[Job ${lessonId}] Input video dimensions: ${dimensions.width}x${dimensions.height}`);
+
+    // Define standard quality levels (skipping 480p to reduce CPU overhead by 25%)
+    const allTargets = [
+      { name: '360p', width: 640, height: 360, vBitrate: '800k', vMaxrate: '856k', vBufsize: '1200k', aBitrate: '96k' },
+      { name: '720p', width: 1280, height: 720, vBitrate: '2500k', vMaxrate: '2675k', vBufsize: '3750k', aBitrate: '128k' },
+      { name: '1080p', width: 1920, height: 1080, vBitrate: '5000k', vMaxrate: '5350k', vBufsize: '7500k', aBitrate: '192k' }
+    ];
+
+    // Filter targets to prevent upscaling
+    const targets = allTargets.filter(t => t.height <= dimensions.height);
+    if (targets.length === 0) {
+      targets.push(allTargets[0]); // fallback to 360p if height is extremely small
+    }
+    console.log(`[Job ${lessonId}] Target qualities to generate: ${targets.map(t => t.name).join(', ')}`);
+
+    // Create stream subdirectories dynamically
+    for (let i = 0; i < targets.length; i++) {
+      fs.mkdirSync(path.join(outputDir, `stream_${i}`), { recursive: true });
+    }
+
+    // Build filter_complex with fast_bilinear scaling
+    let filterComplex = '';
+    const outputNames = [];
+    if (targets.length === 1) {
+      const t = targets[0];
+      filterComplex = `[0:v]scale=w=${t.width}:h=${t.height}:flags=fast_bilinear[v1out]`;
+      outputNames.push('v1out');
+    } else {
+      filterComplex = `[0:v]split=${targets.length}`;
+      for (let i = 0; i < targets.length; i++) {
+        filterComplex += `[v${i + 1}]`;
+        outputNames.push(`v${i + 1}out`);
+      }
+      filterComplex += ';';
+      for (let i = 0; i < targets.length; i++) {
+        const t = targets[i];
+        filterComplex += `[v${i + 1}]scale=w=${t.width}:h=${t.height}:flags=fast_bilinear[${outputNames[i]}];`;
+      }
+      if (filterComplex.endsWith(';')) {
+        filterComplex = filterComplex.slice(0, -1);
+      }
+    }
+
+    // Construct FFmpeg command dynamically
+    let ffmpegCmd = `ffmpeg -y -i "${rawVideoPath}" -filter_complex "${filterComplex}" `;
+    for (let i = 0; i < targets.length; i++) {
+      const t = targets[i];
+      ffmpegCmd += `-map "[${outputNames[i]}]" `;
+      if (hasAudio) {
+        ffmpegCmd += `-map 0:a `;
+      }
+      // Using 'superfast' preset for a huge CPU speedup on Hugging Face while maintaining decent compression
+      ffmpegCmd += `-c:v:${i} libx264 -preset:v:${i} superfast -b:v:${i} ${t.vBitrate} -maxrate:v:${i} ${t.vMaxrate} -bufsize:v:${i} ${t.vBufsize} `;
+    }
+
+    if (hasAudio) {
+      ffmpegCmd += `-c:a aac `;
+      for (let i = 0; i < targets.length; i++) {
+        ffmpegCmd += `-b:a:${i} ${targets[i].aBitrate} `;
+      }
+    }
+
+    const varStreamMap = targets.map((_, i) => hasAudio ? `v:${i},a:${i}` : `v:${i}`).join(' ');
+
+    ffmpegCmd += `-f hls -hls_time 6 -hls_playlist_type event -hls_segment_filename "${outputDir}/stream_%v/%03d.ts" -master_pl_name master.m3u8 -var_stream_map "${varStreamMap}" "${outputDir}/stream_%v/index.m3u8"`;
 
     await new Promise((resolve, reject) => {
       exec(ffmpegCmd, (error, stdout, stderr) => {
@@ -112,42 +183,77 @@ app.post('/transcode', verifyWorker, async (req, res) => {
       });
     });
 
+    // Run Whisper Transcription to generate English WebVTT subtitles
+    const localVttPath = path.join(outputDir, 'subtitles_en.vtt');
+    console.log(`[Job ${lessonId}] Generating AI subtitles using Whisper...`);
+    try {
+      await new Promise((resolve, reject) => {
+        // Run Whisper using python3 in the virtual env we set up in Dockerfile
+        const pythonPath = fs.existsSync('/opt/venv/bin/python3') ? '/opt/venv/bin/python3' : 'python3';
+        exec(`${pythonPath} transcribe.py "${rawVideoPath}" "${localVttPath}" --model base`, (error, stdout, stderr) => {
+          if (error) {
+            console.error(`[Job ${lessonId}] Whisper script failed:`, stderr);
+            return reject(error);
+          }
+          console.log(`[Job ${lessonId}] Whisper transcription completed successfully.`);
+          resolve();
+        });
+      });
+    } catch (whisperError) {
+      console.warn(`[Job ${lessonId}] Subtitle generation failed. Continuing transcoding callback anyway:`, whisperError);
+    }
+
     // D. Upload the transcoded HLS package to Cloudflare R2
     console.log(`[Job ${lessonId}] Uploading segments to Cloudflare R2...`);
     const filesToUpload = getAllFiles(outputDir);
     
-    for (const filePath of filesToUpload) {
-      const relativePath = path.relative(outputDir, filePath).replace(/\\/g, '/'); // Unix slashes
-      const r2Key = `videos/processed/${lessonId}/${relativePath}`;
-      const fileStream = fs.createReadStream(filePath);
-      
-      let contentType = 'application/octet-stream';
-      if (relativePath.endsWith('.m3u8')) contentType = 'application/x-mpegURL';
-      if (relativePath.endsWith('.ts')) contentType = 'video/MP2T';
+    const BATCH_SIZE = 10;
+    for (let i = 0; i < filesToUpload.length; i += BATCH_SIZE) {
+      const batch = filesToUpload.slice(i, i + BATCH_SIZE);
+      await Promise.all(batch.map(async (filePath) => {
+        const relativePath = path.relative(outputDir, filePath).replace(/\\/g, '/'); // Unix slashes
+        const r2Key = `videos/processed/${lessonId}/${relativePath}`;
+        const fileBuffer = fs.readFileSync(filePath);
+        
+        let contentType = 'application/octet-stream';
+        if (relativePath.endsWith('.m3u8')) contentType = 'application/x-mpegURL';
+        if (relativePath.endsWith('.ts')) contentType = 'video/MP2T';
+        if (relativePath.endsWith('.vtt')) contentType = 'text/vtt';
 
-      await s3Client.send(new PutObjectCommand({
-        Bucket: process.env.R2_BUCKET_NAME,
-        Key: r2Key,
-        Body: fileStream,
-        ContentType: contentType
+        await s3Client.send(new PutObjectCommand({
+          Bucket: process.env.R2_BUCKET_NAME,
+          Key: r2Key,
+          Body: fileBuffer,
+          ContentType: contentType
+        }));
       }));
     }
     console.log(`[Job ${lessonId}] Uploaded ${filesToUpload.length} files successfully.`);
 
     // E. Notify main backend callback
     const hlsKey = `videos/processed/${lessonId}/master.m3u8`;
+    const hasVtt = fs.existsSync(localVttPath);
     console.log(`[Job ${lessonId}] Sending callback to backend...`);
+    const callbackPayload = {
+      lessonId,
+      hlsKey,
+      status: 'ready',
+      subtitles: hasVtt ? [
+        {
+          lang: 'en',
+          label: 'English',
+          vttKey: `videos/processed/${lessonId}/subtitles_en.vtt`
+        }
+      ] : []
+    };
+
     const callbackResp = await fetch(`${backendUrl}/api/upload/transcode-callback`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-Worker-Secret': workerSecret,
       },
-      body: JSON.stringify({
-        lessonId,
-        hlsKey,
-        status: 'ready',
-      }),
+      body: JSON.stringify(callbackPayload),
     });
 
     if (callbackResp.ok) {

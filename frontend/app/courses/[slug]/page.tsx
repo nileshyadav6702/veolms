@@ -60,6 +60,7 @@ export default function CourseDetailPage() {
   // Preview video state
   const [previewLesson, setPreviewLesson] = useState<Lesson | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [previewSubtitles, setPreviewSubtitles] = useState<any[]>([])
   const [previewLoading, setPreviewLoading] = useState(false)
 
   // Mock checkout sandbox states
@@ -202,8 +203,10 @@ export default function CourseDetailPage() {
     try {
       setPreviewLoading(true)
       setPreviewLesson(lesson)
+      setPreviewSubtitles([])
       const data = await api.get(`/api/lessons/${lesson._id}/stream`)
       setPreviewUrl(data.url)
+      setPreviewSubtitles(data.subtitles || [])
     } catch (err: any) {
       alert(err.message || 'Unable to play preview video.')
       setPreviewLesson(null)
@@ -215,6 +218,7 @@ export default function CourseDetailPage() {
   const closePreview = () => {
     setPreviewLesson(null)
     setPreviewUrl(null)
+    setPreviewSubtitles([])
   }
 
   const handleCurriculumLessonClick = (lesson: Lesson) => {
@@ -650,6 +654,7 @@ export default function CourseDetailPage() {
               ) : previewUrl ? (
                 <VideoPlayer
                   src={previewUrl}
+                  subtitles={previewSubtitles}
                   className="w-full h-full"
                   autoPlay
                 />
