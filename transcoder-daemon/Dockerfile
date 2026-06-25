@@ -10,8 +10,8 @@ RUN apt-get update && \
 WORKDIR /usr/src/app
 
 # Install dependencies
-COPY package*.json ./
-RUN npm ci --only=production
+COPY package.json ./
+RUN npm install --only=production
 
 # Copy application code
 COPY . .

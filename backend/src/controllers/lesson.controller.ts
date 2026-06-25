@@ -188,6 +188,25 @@ export async function getLessonHlsFile(req: Request, res: Response): Promise<voi
 }
 
 
+async function triggerTranscodeWorker(lessonId: string, videoKey: string): Promise<void> {
+  const workerUrl = process.env.TRANSCODE_WORKER_URL;
+  if (workerUrl && videoKey && videoKey !== 'videos/raw/temp-video.mp4') {
+    console.log(`[Transcode Trigger] Notifying worker at ${workerUrl} for lesson ${lessonId}`);
+    fetch(workerUrl, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json', 
+        'X-Worker-Secret': process.env.WORKER_SECRET || '' 
+      },
+      body: JSON.stringify({ lessonId, videoKey }),
+    }).catch((err) => {
+      console.error('[Transcode Trigger] Worker notification failed:', err);
+    });
+  } else {
+    console.log('[Transcode Trigger] Skipping transcode trigger. Worker URL not configured or placeholder video key.');
+  }
+}
+
 export async function createLesson(req: Request, res: Response): Promise<void> {
   try {
     const data = lessonSchema.parse(req.body);
@@ -196,9 +215,22 @@ export async function createLesson(req: Request, res: Response): Promise<void> {
       res.status(404).json({ success: false, message: 'Course not found' });
       return;
     }
+    
+    // Default to processing if we have a real video
+    if (data.videoKey && data.videoKey !== 'videos/raw/temp-video.mp4') {
+      data.status = 'processing';
+    }
+
     const lesson = await Lesson.create(data);
+    
     // Update course totalLessons
     await Course.findByIdAndUpdate(data.courseId, { $inc: { totalLessons: 1 } });
+
+    // Automatically trigger transcode in the background
+    if (lesson.videoKey && lesson.videoKey !== 'videos/raw/temp-video.mp4') {
+      triggerTranscodeWorker(lesson._id.toString(), lesson.videoKey);
+    }
+
     res.status(201).json({ success: true, lesson });
   } catch (err) {
     if (err instanceof z.ZodError) {
@@ -218,8 +250,10 @@ export async function updateLesson(req: Request, res: Response): Promise<void> {
       return;
     }
 
+    let needsTranscode = false;
     // If new videoKey is supplied and differs from the old one, clean up R2 objects
     if (data.videoKey && data.videoKey !== oldLesson.videoKey) {
+      needsTranscode = true;
       if (oldLesson.videoKey && oldLesson.videoKey !== 'videos/raw/temp-video.mp4') {
         try {
           await deleteObject(oldLesson.videoKey);
@@ -236,7 +270,19 @@ export async function updateLesson(req: Request, res: Response): Promise<void> {
       }
     }
 
+    // Force status to processing and clear old hlsKey if video changed
+    if (needsTranscode) {
+      data.status = 'processing';
+      data.hlsKey = '';
+    }
+
     const lesson = await Lesson.findByIdAndUpdate(req.params.id, data, { new: true, runValidators: true });
+    
+    // Automatically trigger transcode in the background
+    if (needsTranscode && lesson && lesson.videoKey && lesson.videoKey !== 'videos/raw/temp-video.mp4') {
+      triggerTranscodeWorker(lesson._id.toString(), lesson.videoKey);
+    }
+
     res.json({ success: true, lesson });
   } catch (err) {
     if (err instanceof z.ZodError) {

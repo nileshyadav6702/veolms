@@ -1,0 +1,13 @@
+name = "veolms-transcode-worker"
+main = "index.js"
+compatibility_date = "2026-06-25"
+
+[vars]
+# Replace this with your actual Hugging Face Space URL (without trailing slash or "/transcode")
+VPS_DAEMON_URL = "https://YOUR_HF_USERNAME-YOUR_SPACE_NAME.hf.space"
+# Must match the DAEMON_SECRET you set in the Hugging Face Space Secrets
+DAEMON_SECRET = "your-very-secure-daemon-secret"
+# The backend API URL (for local development, use Ngrok/Tunnels so Hugging Face can send callbacks to your local machine)
+BACKEND_URL = "http://localhost:5000"
+# Must match the WORKER_SECRET in your backend .env
+WORKER_SECRET = "transcode worker secret"
