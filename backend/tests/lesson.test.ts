@@ -126,7 +126,8 @@ describe('Lesson Streaming & HLS Routes', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.isHls).toBe(true);
       expect(res.body.url).toContain('/api/lessons/');
-      expect(res.body.url).toContain('/hls/master.m3u8');
+      expect(res.body.url).toContain('/hls/');
+      expect(res.body.url).toContain('/master.m3u8');
     });
 
     it('returns backend proxy url if HLS is ready', async () => {
@@ -148,8 +149,9 @@ describe('Lesson Streaming & HLS Routes', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.isHls).toBe(true);
       expect(res.body.url).toContain('/api/lessons/');
-      expect(res.body.url).toContain('/hls/master.m3u8');
-      expect(res.body.url).toContain(`token=${studentToken}`);
+      expect(res.body.url).toContain('/hls/');
+      expect(res.body.url).toContain('/master.m3u8');
+      expect(res.body.url).toContain(studentToken);
     });
 
     it('returns direct presigned MP4 url if HLS key does not exist', async () => {

@@ -148,10 +148,22 @@ export async function getLessonHlsFile(req: Request, res: Response): Promise<voi
       return;
     }
 
-    const relativePath = req.params[0]; // Captured by Express wildcard router ('*')
+    let relativePath = req.params[0]; // Captured by Express wildcard router ('*')
     if (!relativePath) {
       res.status(400).json({ success: false, message: 'Filename is required' });
       return;
+    }
+
+    // Split the relative path and check if the first segment is an embedded token
+    const segments = relativePath.split('/');
+    const firstSegment = segments[0];
+    const isToken = !firstSegment.endsWith('.m3u8') && 
+                    !firstSegment.endsWith('.ts') && 
+                    !firstSegment.endsWith('.vtt') && 
+                    !firstSegment.startsWith('stream_');
+
+    if (isToken) {
+      relativePath = segments.slice(1).join('/');
     }
 
     // Resolve target R2 key dynamically
@@ -181,6 +193,13 @@ export async function getLessonHlsFile(req: Request, res: Response): Promise<voi
     } else {
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     }
+
+    // Handle client connection termination (e.g., seeking/pausing) to clean up R2 streams
+    res.on('close', () => {
+      if (stream && !stream.destroyed) {
+        stream.destroy();
+      }
+    });
 
     stream.pipe(res);
   } catch (err: any) {

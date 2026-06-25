@@ -12,6 +12,16 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
     token = req.query.token;
   } else if (req.params.token) {
     token = req.params.token;
+  } else if (req.params[0]) {
+    // Wildcard path authentication fallback: check if first segment is token
+    const firstSegment = req.params[0].split('/')[0];
+    const isToken = !firstSegment.endsWith('.m3u8') && 
+                    !firstSegment.endsWith('.ts') && 
+                    !firstSegment.endsWith('.vtt') && 
+                    !firstSegment.startsWith('stream_');
+    if (isToken) {
+      token = firstSegment;
+    }
   }
 
   if (!token) {

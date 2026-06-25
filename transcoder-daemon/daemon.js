@@ -158,7 +158,8 @@ app.post('/transcode', verifyWorker, async (req, res) => {
         ffmpegCmd += `-map 0:a `;
       }
       // Using 'superfast' preset for a huge CPU speedup on Hugging Face while maintaining decent compression
-      ffmpegCmd += `-c:v:${i} libx264 -preset:v:${i} superfast -b:v:${i} ${t.vBitrate} -maxrate:v:${i} ${t.vMaxrate} -bufsize:v:${i} ${t.vBufsize} `;
+      // Enforce 30fps frame rate and a keyframe interval of 60 frames (2 seconds) to guarantee clean HLS segment boundary splitting
+      ffmpegCmd += `-c:v:${i} libx264 -preset:v:${i} superfast -b:v:${i} ${t.vBitrate} -maxrate:v:${i} ${t.vMaxrate} -bufsize:v:${i} ${t.vBufsize} -r 30 -g 60 -keyint_min 60 -sc_threshold 0 `;
     }
 
     if (hasAudio) {
@@ -170,7 +171,8 @@ app.post('/transcode', verifyWorker, async (req, res) => {
 
     const varStreamMap = targets.map((_, i) => hasAudio ? `v:${i},a:${i}` : `v:${i}`).join(' ');
 
-    ffmpegCmd += `-f hls -hls_time 6 -hls_playlist_type event -hls_segment_filename "${outputDir}/stream_%v/%03d.ts" -master_pl_name master.m3u8 -var_stream_map "${varStreamMap}" "${outputDir}/stream_%v/index.m3u8"`;
+    // Use VOD playlist type, a 4-second segment duration, and mark segments as independent to prevent player pre-buffer limitations and playback lag
+    ffmpegCmd += `-f hls -hls_time 4 -hls_playlist_type vod -hls_flags independent_segments -hls_segment_filename "${outputDir}/stream_%v/%03d.ts" -master_pl_name master.m3u8 -var_stream_map "${varStreamMap}" "${outputDir}/stream_%v/index.m3u8"`;
 
     await new Promise((resolve, reject) => {
       exec(ffmpegCmd, (error, stdout, stderr) => {
