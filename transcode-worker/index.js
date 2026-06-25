@@ -16,9 +16,12 @@ export default {
         return new Response('Missing lessonId or videoKey', { status: 400 });
       }
 
+      const targetUrl = `${env.VPS_DAEMON_URL.replace(/\/$/, '')}/transcode`;
+      console.log(`[Worker] Dispatching transcode request to: ${targetUrl}`);
+
       // 2. Trigger Hugging Face Transcoder Daemon (Fire and Forget)
       ctx.waitUntil(
-        fetch(`${env.VPS_DAEMON_URL}/transcode`, {
+        fetch(targetUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

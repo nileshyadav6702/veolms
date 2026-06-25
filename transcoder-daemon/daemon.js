@@ -9,6 +9,11 @@ require('dotenv').config();
 const app = express();
 app.use(express.json());
 
+app.use((req, res, next) => {
+  console.log(`[Request Received] Method: ${req.method} | URL: ${req.url} | Headers: ${JSON.stringify(req.headers)}`);
+  next();
+});
+
 const PORT = process.env.PORT || 7860;
 
 // Initialize S3 Client for Cloudflare R2
@@ -29,6 +34,10 @@ function verifyWorker(req, res, next) {
   }
   next();
 }
+
+app.get('/', (req, res) => {
+  res.json({ status: 'online', service: 'VeoLMS Transcoder Daemon' });
+});
 
 app.post('/transcode', verifyWorker, async (req, res) => {
   const { lessonId, videoKey, backendUrl, workerSecret } = req.body;

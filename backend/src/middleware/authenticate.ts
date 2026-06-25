@@ -10,6 +10,8 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
     token = authHeader.split(' ')[1];
   } else if (typeof req.query.token === 'string') {
     token = req.query.token;
+  } else if (req.params.token) {
+    token = req.params.token;
   }
 
   if (!token) {

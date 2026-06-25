@@ -23,7 +23,7 @@ function optionalAuth(req: Request, _res: Response, next: NextFunction): void {
 router.get('/course/:courseId', optionalAuth, getLessonsForCourse);
 
 router.get('/:id/stream', authenticate, getLessonStreamUrl);
-router.get('/:id/hls/*', authenticate, getLessonHlsFile);
+router.get('/:id/hls/:token/*', authenticate, getLessonHlsFile);
 router.post('/', authenticate, authorize('admin'), createLesson);
 router.put('/:id', authenticate, authorize('admin'), updateLesson);
 router.delete('/:id', authenticate, authorize('admin'), deleteLesson);

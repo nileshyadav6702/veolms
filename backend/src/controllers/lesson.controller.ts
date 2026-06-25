@@ -92,7 +92,7 @@ export async function getLessonStreamUrl(req: Request, res: Response): Promise<v
     if (lesson.hlsKey) {
       // If HLS playlist is ready, route requests through our server proxy to handle relative TS segment resolution securely
       const baseUrl = `${req.protocol}://${req.get('host')}`;
-      const url = `${baseUrl}/api/lessons/${lesson._id}/hls/master.m3u8?token=${token}`;
+      const url = `${baseUrl}/api/lessons/${lesson._id}/hls/${token}/master.m3u8`;
       res.json({ success: true, url, isHls: true });
       return;
     }
