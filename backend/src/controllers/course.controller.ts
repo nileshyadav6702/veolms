@@ -112,7 +112,7 @@ export async function getCourse(req: Request, res: Response): Promise<void> {
       res.status(404).json({ success: false, message: 'Course not found' });
       return;
     }
-    const lessons = await Lesson.find({ courseId: course._id }).select('title duration order sectionId isPreview status videoKey').sort({ order: 1 });
+    const lessons = await Lesson.find({ courseId: course._id }).select('title description duration order sectionId isPreview status videoKey').sort({ order: 1 });
     const obj = course.toObject();
     obj.thumbnail = formatThumbnailUrl(obj.thumbnail, req);
     res.json({ success: true, course: obj, lessons });
