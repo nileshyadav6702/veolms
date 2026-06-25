@@ -31,7 +31,11 @@ export default function StudentPaymentsPage() {
     try {
       setLoading(true)
       const data = await api.get('/api/enrollments')
-      setEnrollments(data.enrollments || [])
+      // Filter out enrollments where courseId is null or undefined (e.g. from deleted courses)
+      const validEnrollments = (data.enrollments || []).filter(
+        (enroll: any) => enroll.courseId !== null && enroll.courseId !== undefined
+      )
+      setEnrollments(validEnrollments)
     } catch {
       // Ignore
     } finally {

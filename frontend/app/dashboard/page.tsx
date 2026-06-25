@@ -74,7 +74,10 @@ export default function StudentDashboardPage() {
     try {
       setLoading(true)
       const data = await api.get('/api/enrollments')
-      const activeEnrollments = data.enrollments as EnrollmentData[]
+      // Filter out enrollments where courseId is null or undefined (e.g. from deleted courses)
+      const activeEnrollments = (data.enrollments as EnrollmentData[]).filter(
+        (enroll) => enroll.courseId !== null && enroll.courseId !== undefined
+      )
 
       // Fetch progress details for each enrolled course in parallel
       const enrichedEnrollments = await Promise.all(
@@ -112,7 +115,15 @@ export default function StudentDashboardPage() {
     try {
       setRecentLoading(true)
       const data = await api.get('/api/progress/recent')
-      setRecentProgress(data.recent || [])
+      // Filter out progress records where courseId or lessonId is null or undefined (e.g. from deleted items)
+      const validProgress = (data.recent || []).filter(
+        (item: any) =>
+          item.courseId !== null &&
+          item.courseId !== undefined &&
+          item.lessonId !== null &&
+          item.lessonId !== undefined
+      )
+      setRecentProgress(validProgress)
     } catch {
       // Ignore
     } finally {
