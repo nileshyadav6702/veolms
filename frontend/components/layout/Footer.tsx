@@ -81,9 +81,20 @@ export default function Footer() {
           <p className="text-[11px] font-mono text-mute">
             © {new Date().getFullYear()} VeoLMS. All rights reserved.
           </p>
+          <div className="flex items-center gap-1.5 text-[11px] font-mono text-mute">
+            <span>Made with ❤️ by</span>
+            <strong className="text-primary font-bold">Nilesh Yadav</strong>
+          </div>
           <p className="text-[11px] font-mono text-mute">
             Built for developers everywhere.
           </p>
+        </div>
+
+        {/* Big name watermark for aesthetics */}
+        <div className="w-full mt-10 overflow-hidden select-none pointer-events-none">
+          <span className="text-[9.5vw] font-bold text-zinc-100 uppercase tracking-[-0.06em] leading-none text-center block w-full">
+            NILESH YADAV
+          </span>
         </div>
       </div>
     </footer>
