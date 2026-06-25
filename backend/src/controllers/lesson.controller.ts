@@ -89,17 +89,16 @@ export async function getLessonStreamUrl(req: Request, res: Response): Promise<v
       token = req.query.token;
     }
 
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const subtitles = lesson.subtitles?.map(s => ({
+      lang: s.lang,
+      label: s.label,
+      url: `${baseUrl}/api/lessons/${lesson._id}/subtitles/${s.lang}?token=${token}`
+    })) || [];
+
     if (lesson.hlsKey) {
       // If HLS playlist is ready, route requests through our server proxy to handle relative TS segment resolution securely
-      const baseUrl = `${req.protocol}://${req.get('host')}`;
       const url = `${baseUrl}/api/lessons/${lesson._id}/hls/${token}/master.m3u8`;
-      
-      const subtitles = lesson.subtitles?.map(s => ({
-        lang: s.lang,
-        label: s.label,
-        url: `${baseUrl}/api/lessons/${lesson._id}/subtitles/${s.lang}`
-      })) || [];
-
       res.json({ success: true, url, isHls: true, subtitles });
       return;
     }
@@ -111,7 +110,7 @@ export async function getLessonStreamUrl(req: Request, res: Response): Promise<v
 
     // Fallback to direct presigned URL for raw mp4 video
     const url = await getPresignedGetUrl(lesson.videoKey, 7200);
-    res.json({ success: true, url, isHls: false });
+    res.json({ success: true, url, isHls: false, subtitles });
   } catch {
     res.status(500).json({ success: false, message: 'Server error' });
   }

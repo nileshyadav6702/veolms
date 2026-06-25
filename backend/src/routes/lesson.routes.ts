@@ -9,9 +9,17 @@ const router = Router();
 // Optional auth — attaches req.user if valid token present, but never blocks
 function optionalAuth(req: Request, _res: Response, next: NextFunction): void {
   const auth = req.headers.authorization;
+  let token: string | undefined;
+
   if (auth?.startsWith('Bearer ')) {
+    token = auth.split(' ')[1];
+  } else if (typeof req.query.token === 'string') {
+    token = req.query.token;
+  }
+
+  if (token) {
     try {
-      const payload = verifyToken(auth.split(' ')[1]);
+      const payload = verifyToken(token);
       req.user = { id: payload.id, email: payload.email, role: payload.role, sessionId: payload.sessionId };
     } catch {
       // Invalid token — proceed without user
