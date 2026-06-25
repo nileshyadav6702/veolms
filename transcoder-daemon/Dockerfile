@@ -16,8 +16,8 @@ RUN npm ci --only=production
 # Copy application code
 COPY . .
 
-# Expose server port
-EXPOSE 8080
+# Expose server port (Hugging Face Spaces require port 7860)
+EXPOSE 7860
 
 # Run service
 CMD [ "node", "daemon.js" ]

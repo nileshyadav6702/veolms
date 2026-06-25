@@ -9,7 +9,7 @@ require('dotenv').config();
 const app = express();
 app.use(express.json());
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 7860;
 
 // Initialize S3 Client for Cloudflare R2
 const s3Client = new S3Client({
