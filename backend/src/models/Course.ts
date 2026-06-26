@@ -65,8 +65,8 @@ const courseSchema = new Schema<ICourse>(
       instructorTitle: { type: String, default: '' },
       logoUrl: { type: String, default: '' },
       signatureUrl: { type: String, default: '' },
-      primaryColor: { type: String, default: '#000000' },
-      accentColor: { type: String, default: '#3b82f6' },
+      primaryColor: { type: String, default: '#ffffff' },
+      accentColor: { type: String, default: '#000000' },
     },
   },
   { timestamps: true }

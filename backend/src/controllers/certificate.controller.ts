@@ -37,8 +37,8 @@ export async function getCertificateTemplate(req: Request, res: Response): Promi
       instructorTitle: '',
       logoUrl: '',
       signatureUrl: '',
-      primaryColor: '#000000',
-      accentColor: '#3b82f6',
+      primaryColor: '#ffffff',
+      accentColor: '#000000',
     };
 
     // Format URLs if they exist
@@ -74,8 +74,8 @@ export async function updateCertificateTemplate(req: Request, res: Response): Pr
       instructorTitle: data.instructorTitle,
       logoUrl: data.logoUrl || '',
       signatureUrl: data.signatureUrl || '',
-      primaryColor: data.primaryColor || '#000000',
-      accentColor: data.accentColor || '#3b82f6',
+      primaryColor: data.primaryColor || '#ffffff',
+      accentColor: data.accentColor || '#000000',
     };
 
     await course.save();

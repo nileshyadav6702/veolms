@@ -145,7 +145,7 @@ export default function PublicCertificateView() {
   const borderColor = isDarkTheme ? 'rgba(255, 255, 255, 0.1)' : 'rgba(15, 23, 42, 0.08)'
 
   return (
-    <div className="flex-1 min-h-screen bg-zinc-950 text-zinc-100 flex flex-col justify-between font-sans relative">
+    <div className="flex-1 min-h-screen bg-zinc-50 text-zinc-900 flex flex-col justify-between font-sans relative">
       
       {/* Dynamic @media print styling so print is perfect landscape A4 */}
       <style dangerouslySetInnerHTML={{ __html: `
@@ -194,10 +194,10 @@ export default function PublicCertificateView() {
       `}} />
 
       {/* Header Info (No Print) */}
-      <header className="no-print border-b border-zinc-800 bg-zinc-900/50 backdrop-blur-md sticky top-0 z-30 py-4 px-6">
+      <header className="no-print border-b border-zinc-200 bg-white/80 backdrop-blur-md sticky top-0 z-30 py-4 px-6 shadow-sm">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/dashboard" className="text-zinc-400 hover:text-white transition-colors">
+            <Link href="/dashboard" className="text-zinc-500 hover:text-zinc-900 transition-colors">
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div className="flex items-center gap-1.5 font-mono">
@@ -212,14 +212,14 @@ export default function PublicCertificateView() {
               variant="outline"
               size="sm"
               onClick={copyLink}
-              className="border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800 text-xs font-bold font-sans h-9 px-3 gap-1.5"
+              className="border-zinc-200 text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100 text-xs font-bold font-sans h-9 px-3 gap-1.5"
             >
               <Copy className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Copy Link</span>
             </Button>
             <Button
               onClick={handlePrint}
-              className="bg-white hover:bg-zinc-200 text-zinc-950 text-xs font-bold font-sans h-9 px-4 gap-1.5 flex items-center shadow-lg"
+              className="bg-zinc-950 hover:bg-zinc-800 text-white text-xs font-bold font-sans h-9 px-4 gap-1.5 flex items-center shadow-md border-none cursor-pointer"
             >
               <Download className="w-3.5 h-3.5" />
               <span>Download PDF / Print</span>
@@ -231,12 +231,12 @@ export default function PublicCertificateView() {
       {/* Main Body */}
       <main className="flex-1 flex flex-col items-center justify-center p-6 sm:p-12 relative overflow-hidden">
         {/* Vercel Ambient Background Grid */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f2937_1px,transparent_1px),linear-gradient(to_bottom,#1f2937_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-30 pointer-events-none" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#e4e4e7_1px,transparent_1px),linear-gradient(to_bottom,#e4e4e7_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-40 pointer-events-none" />
 
         {/* Certificate Landscape Card */}
-        <div className="print-card-wrapper w-full max-w-[850px] aspect-[1.414/1] bg-black border border-zinc-800 rounded-2xl p-0.5 shadow-2xl relative z-10 flex items-center justify-center transition-all duration-300 overflow-hidden">
+        <div className="print-card-wrapper w-full max-w-[850px] aspect-[1.414/1] bg-zinc-100 border border-zinc-200 rounded-2xl p-2.5 shadow-2xl relative z-10 flex items-center justify-center transition-all duration-300 overflow-hidden">
           <div
-            className="print-inner-card w-full h-full rounded-[14px] p-8 sm:p-12 flex flex-col justify-between relative overflow-hidden transition-all duration-300 border border-zinc-900"
+            className="print-inner-card w-full h-full rounded-[14px] p-8 sm:p-12 flex flex-col justify-between relative overflow-hidden transition-all duration-300 border border-zinc-200/50"
             style={{
               backgroundColor: primaryColor,
               color: textColor
@@ -265,7 +265,7 @@ export default function PublicCertificateView() {
                   />
                 ) : (
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-zinc-800 rounded-md flex items-center justify-center" style={{ backgroundColor: accentColor + '20' }}>
+                    <div className="w-6 h-6 bg-zinc-200 rounded-md flex items-center justify-center" style={{ backgroundColor: accentColor + '20' }}>
                       <Award className="w-4 h-4" style={{ color: accentColor }} />
                     </div>
                     <span className="text-[12px] font-extrabold tracking-widest uppercase font-mono">VEOLMS</span>
@@ -352,20 +352,20 @@ export default function PublicCertificateView() {
         </div>
 
         {/* Verification Info Block (No Print) */}
-        <section className="no-print mt-10 max-w-[850px] w-full bg-zinc-900 border border-zinc-800 rounded-xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-md relative z-10">
+        <section className="no-print mt-10 max-w-[850px] w-full bg-white border border-zinc-200 rounded-xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm relative z-10">
           <div className="flex gap-4">
-            <div className="w-10 h-10 bg-emerald-950/20 border border-emerald-500/20 text-emerald-500 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
+            <div className="w-10 h-10 bg-emerald-50 border border-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
               <ShieldCheck className="w-6 h-6" />
             </div>
             <div>
-              <h4 className="text-sm font-bold text-white mb-0.5">
+              <h4 className="text-sm font-bold text-zinc-950 mb-0.5">
                 Cryptographically Verified Credential
               </h4>
-              <p className="text-xs text-zinc-400 leading-normal max-w-xl">
+              <p className="text-xs text-zinc-600 leading-normal max-w-xl">
                 This certificate has been issued by VEOLMS to confirm that{' '}
-                <strong className="text-zinc-200">{cert.userId.name}</strong> has fully
+                <strong className="text-zinc-800">{cert.userId.name}</strong> has fully
                 completed and passed all course curriculum guidelines for{' '}
-                <strong className="text-zinc-200">{cert.courseId.title}</strong>.
+                <strong className="text-zinc-800">{cert.courseId.title}</strong>.
               </p>
             </div>
           </div>
@@ -374,7 +374,7 @@ export default function PublicCertificateView() {
               <span className="text-[8px] font-bold text-zinc-500 uppercase tracking-wider block mb-0.5">
                 Verification Date
               </span>
-              <span className="text-xs text-zinc-300 font-bold flex items-center gap-1">
+              <span className="text-xs text-zinc-700 font-bold flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5 text-zinc-500" />
                 {new Date(cert.issuedAt).toLocaleDateString()}
               </span>
@@ -384,8 +384,8 @@ export default function PublicCertificateView() {
       </main>
 
       {/* Footer (No Print) */}
-      <footer className="no-print py-6 text-center border-t border-zinc-800 bg-zinc-900/10 text-xs text-zinc-500 relative z-10">
-        <p className="font-mono text-[9px] uppercase tracking-widest">
+      <footer className="no-print py-6 text-center border-t border-zinc-200 bg-zinc-50 text-xs text-zinc-500 relative z-10">
+        <p className="font-mono text-[9px] uppercase tracking-widest text-zinc-400">
           VEOLMS Verification Portal &copy; {new Date().getFullYear()}
         </p>
       </footer>

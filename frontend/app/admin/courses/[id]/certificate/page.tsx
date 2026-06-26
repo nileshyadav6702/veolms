@@ -141,7 +141,7 @@ export default function AdminCertificateEditor() {
     } finally {
       setLoading(false)
     }
-  }, [courseId, router, toast])
+  }, [courseId])
 
   useEffect(() => {
     if (courseId) {
@@ -228,8 +228,8 @@ export default function AdminCertificateEditor() {
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center p-12 bg-zinc-950 h-screen text-white">
-        <Spinner className="w-8 h-8 text-white" />
+      <div className="flex-1 flex items-center justify-center p-12 bg-zinc-50 h-screen text-zinc-900">
+        <Spinner className="w-8 h-8 text-zinc-900" />
       </div>
     )
   }
@@ -243,30 +243,30 @@ export default function AdminCertificateEditor() {
 
   return (
     <ProtectedRoute>
-      <div className="flex-1 flex flex-col lg:flex-row h-screen overflow-hidden bg-zinc-950 text-zinc-100 font-sans">
+      <div className="flex-1 flex flex-col lg:flex-row h-screen overflow-hidden bg-zinc-50 text-zinc-900 font-sans">
         
         {/* LEFT COLUMN: Editor Form Panel */}
-        <div className="w-full lg:w-[450px] shrink-0 border-r border-zinc-800 flex flex-col justify-between bg-zinc-900 overflow-y-auto">
+        <div className="w-full lg:w-[450px] shrink-0 border-r border-zinc-200 flex flex-col justify-between bg-white overflow-y-auto">
           <div>
             {/* Header */}
-            <div className="p-6 border-b border-zinc-800">
+            <div className="p-6 border-b border-zinc-200">
               <Link
                 href={`/admin/courses/${courseId}`}
-                className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-400 hover:text-zinc-200 transition-colors uppercase tracking-wider font-mono mb-3"
+                className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-500 hover:text-zinc-800 transition-colors uppercase tracking-wider font-mono mb-3"
               >
                 <ArrowLeft className="w-3.5 h-3.5" /> Back to builder
               </Link>
-              <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-                <Award className="w-5 h-5 text-indigo-400" /> Certificate Template
+              <h1 className="text-xl font-bold tracking-tight text-zinc-900 flex items-center gap-2">
+                <Award className="w-5 h-5 text-indigo-500" /> Certificate Template
               </h1>
-              <p className="text-xs text-zinc-400 mt-1">
+              <p className="text-xs text-zinc-500 mt-1">
                 Customize the layout, colors, and content of the completion certificates issued to students.
               </p>
             </div>
 
             {/* Presets Row */}
-            <div className="p-6 border-b border-zinc-800 bg-zinc-900/50">
-              <h2 className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 font-mono mb-3 flex items-center gap-1.5">
+            <div className="p-6 border-b border-zinc-200 bg-zinc-50">
+              <h2 className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 font-mono mb-3 flex items-center gap-1.5">
                 <Paintbrush className="w-3.5 h-3.5" /> Quick Style Presets
               </h2>
               <div className="grid grid-cols-2 gap-2">
@@ -274,12 +274,12 @@ export default function AdminCertificateEditor() {
                   <button
                     key={preset.name}
                     onClick={() => applyPreset(preset)}
-                    className="p-2.5 rounded-lg border border-zinc-800 hover:border-zinc-700 bg-zinc-950 text-left hover:bg-zinc-900 transition-all cursor-pointer group"
+                    className="p-2.5 rounded-lg border border-zinc-200 hover:border-zinc-300 bg-white text-left hover:bg-zinc-50 transition-all cursor-pointer group"
                   >
-                    <div className="text-xs font-semibold text-white group-hover:text-indigo-400 transition-colors">{preset.name}</div>
+                    <div className="text-xs font-semibold text-zinc-800 group-hover:text-indigo-600 transition-colors">{preset.name}</div>
                     <div className="flex gap-1.5 mt-1.5">
-                      <div className="w-3 h-3 rounded-full border border-zinc-700" style={{ backgroundColor: preset.primaryColor }} />
-                      <div className="w-3 h-3 rounded-full border border-zinc-700" style={{ backgroundColor: preset.accentColor }} />
+                      <div className="w-3 h-3 rounded-full border border-zinc-300" style={{ backgroundColor: preset.primaryColor }} />
+                      <div className="w-3 h-3 rounded-full border border-zinc-300" style={{ backgroundColor: preset.accentColor }} />
                     </div>
                   </button>
                 ))}
@@ -288,49 +288,49 @@ export default function AdminCertificateEditor() {
 
             {/* Config Fields */}
             <div className="p-6 space-y-5">
-              <h2 className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 font-mono mb-1 flex items-center gap-1.5">
+              <h2 className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 font-mono mb-1 flex items-center gap-1.5">
                 <Settings className="w-3.5 h-3.5" /> Content Settings
               </h2>
 
               <div>
-                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider font-mono mb-1.5">
+                <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider font-mono mb-1.5">
                   Certificate Title
                 </label>
                 <Input
                   value={template.title}
                   onChange={(e) => setTemplate((prev) => ({ ...prev, title: e.target.value }))}
                   placeholder="e.g. Certificate of Completion"
-                  className="bg-zinc-950 border-zinc-800 text-white text-xs placeholder-zinc-600 focus:border-zinc-700"
+                  className="bg-white border-zinc-200 text-zinc-900 text-xs placeholder-zinc-400 focus:border-zinc-300"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider font-mono mb-1.5">
+                <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider font-mono mb-1.5">
                   Presentation Subtitle
                 </label>
                 <Input
                   value={template.subTitle}
                   onChange={(e) => setTemplate((prev) => ({ ...prev, subTitle: e.target.value }))}
                   placeholder="e.g. This is to certify that"
-                  className="bg-zinc-950 border-zinc-800 text-white text-xs placeholder-zinc-600 focus:border-zinc-700"
+                  className="bg-white border-zinc-200 text-zinc-900 text-xs placeholder-zinc-400 focus:border-zinc-300"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider font-mono mb-1.5">
+                <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider font-mono mb-1.5">
                   Completion Description Text
                 </label>
                 <textarea
                   value={template.bodyText}
                   onChange={(e) => setTemplate((prev) => ({ ...prev, bodyText: e.target.value }))}
                   placeholder="e.g. has successfully completed the course"
-                  className="w-full rounded-lg border border-zinc-800 bg-zinc-950 p-3 text-xs text-white placeholder-zinc-600 focus:border-zinc-700 focus:outline-none min-h-[70px] resize-y"
+                  className="w-full rounded-lg border border-zinc-200 bg-white p-3 text-xs text-zinc-900 placeholder-zinc-400 focus:border-zinc-300 focus:outline-none min-h-[70px] resize-y"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider font-mono mb-1.5">
+                  <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider font-mono mb-1.5">
                     Primary Color
                   </label>
                   <div className="flex items-center gap-2">
@@ -338,14 +338,14 @@ export default function AdminCertificateEditor() {
                       type="color"
                       value={template.primaryColor}
                       onChange={(e) => setTemplate((prev) => ({ ...prev, primaryColor: e.target.value }))}
-                      className="w-8 h-8 rounded border border-zinc-800 bg-transparent cursor-pointer"
+                      className="w-8 h-8 rounded border border-zinc-200 bg-transparent cursor-pointer"
                     />
-                    <span className="text-[10px] font-mono font-bold text-zinc-300">{template.primaryColor}</span>
+                    <span className="text-[10px] font-mono font-bold text-zinc-700">{template.primaryColor}</span>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider font-mono mb-1.5">
+                  <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider font-mono mb-1.5">
                     Accent Color
                   </label>
                   <div className="flex items-center gap-2">
@@ -353,39 +353,39 @@ export default function AdminCertificateEditor() {
                       type="color"
                       value={template.accentColor}
                       onChange={(e) => setTemplate((prev) => ({ ...prev, accentColor: e.target.value }))}
-                      className="w-8 h-8 rounded border border-zinc-800 bg-transparent cursor-pointer"
+                      className="w-8 h-8 rounded border border-zinc-200 bg-transparent cursor-pointer"
                     />
-                    <span className="text-[10px] font-mono font-bold text-zinc-300">{template.accentColor}</span>
+                    <span className="text-[10px] font-mono font-bold text-zinc-700">{template.accentColor}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="border-t border-zinc-800 pt-5 space-y-4">
-                <h3 className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 font-mono">
+              <div className="border-t border-zinc-200 pt-5 space-y-4">
+                <h3 className="text-[10px] font-bold uppercase tracking-wider text-zinc-600 font-mono">
                   Signatory Info
                 </h3>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[9px] font-bold text-zinc-400 uppercase tracking-wider font-mono mb-1">
+                    <label className="block text-[9px] font-bold text-zinc-500 uppercase tracking-wider font-mono mb-1">
                       Instructor Name
                     </label>
                     <Input
                       value={template.instructorName}
                       onChange={(e) => setTemplate((prev) => ({ ...prev, instructorName: e.target.value }))}
                       placeholder="e.g. Dr. Sarah Jenkins"
-                      className="bg-zinc-950 border-zinc-800 text-white text-xs"
+                      className="bg-white border-zinc-200 text-zinc-900 text-xs"
                     />
                   </div>
                   <div>
-                    <label className="block text-[9px] font-bold text-zinc-400 uppercase tracking-wider font-mono mb-1">
+                    <label className="block text-[9px] font-bold text-zinc-500 uppercase tracking-wider font-mono mb-1">
                       Instructor Title
                     </label>
                     <Input
                       value={template.instructorTitle}
                       onChange={(e) => setTemplate((prev) => ({ ...prev, instructorTitle: e.target.value }))}
                       placeholder="e.g. Lead Instructor"
-                      className="bg-zinc-950 border-zinc-800 text-white text-xs"
+                      className="bg-white border-zinc-200 text-zinc-900 text-xs"
                     />
                   </div>
                 </div>
@@ -393,10 +393,10 @@ export default function AdminCertificateEditor() {
                 {/* Upload Section */}
                 <div className="grid grid-cols-2 gap-3 pt-2">
                   <div>
-                    <label className="block text-[9px] font-bold text-zinc-400 uppercase tracking-wider font-mono mb-1.5">
+                    <label className="block text-[9px] font-bold text-zinc-500 uppercase tracking-wider font-mono mb-1.5">
                       Upload Logo
                     </label>
-                    <label className="flex flex-col items-center justify-center border border-dashed border-zinc-800 hover:border-zinc-700 bg-zinc-950 rounded-lg p-3 cursor-pointer text-center group transition-colors">
+                    <label className="flex flex-col items-center justify-center border border-dashed border-zinc-200 hover:border-zinc-300 bg-zinc-50 rounded-lg p-3 cursor-pointer text-center group transition-colors">
                       <UploadCloud className="w-5 h-5 text-zinc-500 group-hover:text-zinc-400 mb-1" />
                       <span className="text-[9px] text-zinc-500 font-medium">Click to upload</span>
                       <input
@@ -407,17 +407,17 @@ export default function AdminCertificateEditor() {
                       />
                     </label>
                     {template.logoUrl && (
-                      <div className="text-[8px] text-emerald-400 mt-1 font-semibold font-mono truncate">
+                      <div className="text-[8px] text-emerald-600 mt-1 font-semibold font-mono truncate">
                         ✓ Logo Uploaded
                       </div>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-[9px] font-bold text-zinc-400 uppercase tracking-wider font-mono mb-1.5">
+                    <label className="block text-[9px] font-bold text-zinc-500 uppercase tracking-wider font-mono mb-1.5">
                       Upload Signature
                     </label>
-                    <label className="flex flex-col items-center justify-center border border-dashed border-zinc-800 hover:border-zinc-700 bg-zinc-950 rounded-lg p-3 cursor-pointer text-center group transition-colors">
+                    <label className="flex flex-col items-center justify-center border border-dashed border-zinc-200 hover:border-zinc-300 bg-zinc-50 rounded-lg p-3 cursor-pointer text-center group transition-colors">
                       <UploadCloud className="w-5 h-5 text-zinc-500 group-hover:text-zinc-400 mb-1" />
                       <span className="text-[9px] text-zinc-500 font-medium">Click to upload</span>
                       <input
@@ -428,7 +428,7 @@ export default function AdminCertificateEditor() {
                       />
                     </label>
                     {template.signatureUrl && (
-                      <div className="text-[8px] text-emerald-400 mt-1 font-semibold font-mono truncate">
+                      <div className="text-[8px] text-emerald-600 mt-1 font-semibold font-mono truncate">
                         ✓ Signature Uploaded
                       </div>
                     )}
@@ -439,23 +439,23 @@ export default function AdminCertificateEditor() {
           </div>
 
           {/* Action button */}
-          <div className="p-6 border-t border-zinc-800 bg-zinc-950 flex items-center justify-end">
+          <div className="p-6 border-t border-zinc-200 bg-zinc-50 flex items-center justify-end">
             <Button
               onClick={handleSave}
               disabled={saveLoading}
-              className="bg-white hover:bg-zinc-200 text-zinc-950 text-xs font-bold font-sans h-9 px-4 gap-1.5 flex items-center shadow-md cursor-pointer"
+              className="bg-zinc-950 hover:bg-zinc-800 text-white text-xs font-bold font-sans h-9 px-4 gap-1.5 flex items-center shadow-md cursor-pointer border-none"
             >
-              {saveLoading ? <Spinner className="w-3.5 h-3.5 text-zinc-950" /> : <Save className="w-3.5 h-3.5" />}
+              {saveLoading ? <Spinner className="w-3.5 h-3.5 text-white" /> : <Save className="w-3.5 h-3.5" />}
               Save Template
             </Button>
           </div>
         </div>
 
         {/* RIGHT COLUMN: Live Interactive Preview Section */}
-        <div className="flex-1 flex flex-col bg-zinc-950 items-center justify-center p-6 sm:p-12 relative overflow-hidden">
+        <div className="flex-1 flex flex-col bg-zinc-100 items-center justify-center p-6 sm:p-12 relative overflow-hidden">
           
           {/* Vercel Ambient Grid / Gradient Background */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f2937_1px,transparent_1px),linear-gradient(to_bottom,#1f2937_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-30" />
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#e4e4e7_1px,transparent_1px),linear-gradient(to_bottom,#e4e4e7_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-35" />
           
           <div className="absolute top-6 left-6 z-10 flex items-center gap-2">
             <Badge variant="purple" className="text-[9px] font-bold font-mono tracking-widest uppercase border border-indigo-500/20 px-2 py-0.5 bg-indigo-500/5">
@@ -464,7 +464,7 @@ export default function AdminCertificateEditor() {
           </div>
 
           {/* Certificate Board Wrapper */}
-          <div className="w-full max-w-[760px] aspect-[1.414/1] bg-black border border-zinc-800 rounded-xl p-0.5 shadow-2xl relative z-10 flex items-center justify-center scale-90 sm:scale-100 origin-center transition-all duration-300">
+          <div className="w-full max-w-[760px] aspect-[1.414/1] bg-zinc-200 border border-zinc-300/60 rounded-xl p-2.5 shadow-2xl relative z-10 flex items-center justify-center scale-90 sm:scale-100 origin-center transition-all duration-300">
             {/* Inner Glow and Border */}
             <div 
               className="w-full h-full rounded-[10px] p-6 sm:p-10 flex flex-col justify-between relative overflow-hidden transition-all duration-300"
@@ -499,7 +499,7 @@ export default function AdminCertificateEditor() {
                     />
                   ) : (
                     <div className="flex items-center gap-1.5">
-                      <div className="w-5 h-5 bg-zinc-800 rounded flex items-center justify-center" style={{ backgroundColor: template.accentColor + '20' }}>
+                      <div className="w-5 h-5 bg-zinc-200 rounded flex items-center justify-center" style={{ backgroundColor: template.accentColor + '20' }}>
                         <Award className="w-3.5 h-3.5" style={{ color: template.accentColor }} />
                       </div>
                       <span className="text-[10px] font-extrabold tracking-widest uppercase font-mono">VEOLMS</span>
@@ -537,7 +537,7 @@ export default function AdminCertificateEditor() {
 
                 <p className="text-[10px] max-w-md leading-relaxed" style={{ color: descColor }}>
                   {template.bodyText}{' '}
-                  <span className="font-extrabold not-italic text-white" style={{ color: textColor }}>
+                  <span className="font-extrabold not-italic" style={{ color: textColor }}>
                     {courseTitle}
                   </span>
                 </p>
