@@ -20,6 +20,9 @@ import {
   Eye,
   EyeOff,
   Cpu,
+  FileText,
+  Edit2,
+  Loader2,
 } from 'lucide-react'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import VideoPlayer from '@/components/video/VideoPlayer'
@@ -65,6 +68,60 @@ interface ProgressRecord {
   completed: boolean
 }
 
+function renderMarkdown(md: string) {
+  if (!md) return '<p class="text-mute italic">No note written yet. Notes are saved in Markdown format.</p>';
+  
+  let html = md
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+    
+  html = html.replace(/^### (.*$)/gim, '<h4 class="text-xs font-bold text-ink mt-3 mb-1 font-sans">$1</h4>');
+  html = html.replace(/^## (.*$)/gim, '<h3 class="text-sm font-bold text-ink mt-4 mb-2 font-sans">$1</h3>');
+  html = html.replace(/^# (.*$)/gim, '<h2 class="text-base font-bold text-ink mt-5 mb-2 font-sans border-b border-hairline pb-1">$1</h2>');
+  
+  html = html.replace(/^\> (.*$)/gim, '<blockquote class="border-l-2 border-zinc-300 pl-3 italic text-mute my-2">$1</blockquote>');
+  
+  html = html.replace(/```([\s\S]*?)```/gm, '<pre class="bg-zinc-50 border border-hairline p-2.5 rounded-lg font-mono text-[11px] text-zinc-800 my-2 overflow-x-auto whitespace-pre-wrap">$1</pre>');
+  
+  html = html.replace(/`([^`]+)`/g, '<code class="bg-zinc-100 px-1 py-0.5 rounded font-mono text-[11px] text-zinc-900 border border-zinc-200/50">$1</code>');
+  
+  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  
+  html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  
+  const lines = html.split('\n');
+  let inList = false;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (line.startsWith('- ') || line.startsWith('* ')) {
+      const itemContent = line.substring(2);
+      if (!inList) {
+        lines[i] = '<ul class="list-disc list-inside space-y-1 my-2 pl-2 text-body">\n<li>' + itemContent + '</li>';
+        inList = true;
+      } else {
+        lines[i] = '<li>' + itemContent + '</li>';
+      }
+    } else {
+      if (inList) {
+        lines[i] = '</ul>\n' + lines[i];
+        inList = false;
+      }
+      if (lines[i].trim() && !lines[i].trim().startsWith('<h') && !lines[i].trim().startsWith('<pre') && !lines[i].trim().startsWith('<block') && !lines[i].trim().startsWith('<ul') && !lines[i].trim().startsWith('<li') && !lines[i].trim().startsWith('</ul')) {
+        lines[i] = '<p class="my-1.5 leading-relaxed">' + lines[i] + '</p>';
+      }
+    }
+  }
+  if (inList) {
+    lines.push('</ul>');
+  }
+  html = lines.join('\n');
+  
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:underline">$1</a>');
+
+  return html;
+}
+
 export default function LearnPage() {
   const router = useRouter()
   const params = useParams()
@@ -92,7 +149,14 @@ export default function LearnPage() {
 
   const toast = useToast()
 
-  const [sidebarTab, setSidebarTab] = useState<'syllabus' | 'ai'>('syllabus')
+  const [sidebarTab, setSidebarTab] = useState<'syllabus' | 'ai' | 'notes'>('syllabus')
+
+  // Notes states
+  const [noteContent, setNoteContent] = useState('')
+  const [courseNotes, setCourseNotes] = useState<any[]>([])
+  const [notesSubTab, setNotesSubTab] = useState<'edit' | 'preview' | 'all'>('edit')
+  const [savingNote, setSavingNote] = useState(false)
+  const [loadingNotes, setLoadingNotes] = useState(false)
 
   // Chat Assistant states
   const [chatMessages, setChatMessages] = useState<Array<{ sender: 'user' | 'ai'; text: string; timestamp: Date }>>([])
@@ -251,11 +315,59 @@ export default function LearnPage() {
     }
   }, [courseId, lessonId, router])
 
+  const fetchCurrentNote = useCallback(async (targetLessonId: string) => {
+    try {
+      setLoadingNotes(true)
+      const data = await api.get(`/api/notes/lesson/${targetLessonId}`)
+      if (data.note) {
+        setNoteContent(data.note.content)
+      } else {
+        setNoteContent('')
+      }
+    } catch (err) {
+      console.error('Failed to load note:', err)
+    } finally {
+      setLoadingNotes(false)
+    }
+  }, [])
+
+  const fetchCourseNotes = useCallback(async () => {
+    try {
+      const data = await api.get(`/api/notes/course/${courseId}`)
+      setCourseNotes(data.notes || [])
+    } catch (err) {
+      console.error('Failed to load course notes:', err)
+    }
+  }, [courseId])
+
+  const saveCurrentNote = async () => {
+    if (!currentLesson) return
+    setSavingNote(true)
+    try {
+      await api.post('/api/notes', {
+        courseId,
+        lessonId: currentLesson._id,
+        content: noteContent,
+      })
+      toast.success('Note saved successfully!')
+      fetchCourseNotes()
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to save note')
+    } finally {
+      setSavingNote(false)
+    }
+  }
+
+  const handleSelectNoteLesson = (targetLessonId: string) => {
+    router.push(`/learn/${courseId}/${targetLessonId}`)
+    setNotesSubTab('preview')
+  }
+
   useEffect(() => {
     loadLearnData()
   }, [loadLearnData])
 
-  // Fetch stream url whenever the active lesson changes
+  // Fetch stream url and notes whenever the active lesson changes
   const loadStreamUrl = useCallback(async () => {
     if (!currentLesson) return
     try {
@@ -275,9 +387,10 @@ export default function LearnPage() {
   useEffect(() => {
     if (currentLesson) {
       loadStreamUrl()
-
+      fetchCurrentNote(currentLesson._id)
+      fetchCourseNotes()
     }
-  }, [currentLesson, loadStreamUrl, courseId])
+  }, [currentLesson, loadStreamUrl, fetchCurrentNote, fetchCourseNotes, courseId])
 
   // Cleanup timers on unmount
   useEffect(() => {
@@ -610,6 +723,20 @@ export default function LearnPage() {
                         <Sparkles className="w-3.5 h-3.5 text-indigo-500 animate-pulse" />
                         <span>AI Assistant</span>
                       </button>
+                      <button
+                        onClick={() => {
+                          setSidebarTab('notes')
+                          setSidebarOpen(sidebarTab === 'notes' ? !sidebarOpen : true)
+                        }}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 border hover:bg-canvas-soft-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                          sidebarOpen && sidebarTab === 'notes' 
+                            ? 'bg-zinc-100 border-zinc-400 text-ink font-bold' 
+                            : 'bg-white border-hairline text-body hover:text-ink'
+                        }`}
+                      >
+                        <FileText className="w-3.5 h-3.5 text-zinc-550 animate-pulse" />
+                        <span>Notes</span>
+                      </button>
                       <Button
                         variant="secondary"
                         size="sm"
@@ -678,6 +805,17 @@ export default function LearnPage() {
               >
                 <Sparkles className="w-3.5 h-3.5 text-indigo-500 animate-pulse" />
                 AI Assistant
+              </button>
+              <button
+                onClick={() => setSidebarTab('notes')}
+                className={`flex-1 flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-wider transition-all border-b-2 cursor-pointer ${
+                  sidebarTab === 'notes'
+                    ? 'border-indigo-600 text-ink bg-zinc-50/50'
+                    : 'border-transparent text-mute hover:text-ink hover:bg-canvas-soft-2'
+                }`}
+              >
+                <FileText className="w-3.5 h-3.5" />
+                Notes
               </button>
               <button
                 onClick={() => setSidebarOpen(false)}
@@ -760,7 +898,7 @@ export default function LearnPage() {
                   )
                 })}
               </div>
-            ) : (
+            ) : sidebarTab === 'ai' ? (
               <div className="flex-1 flex flex-col min-h-0 bg-canvas-soft">
                 {/* AI Chat Header */}
                 <div className="px-4 py-3 bg-gradient-to-r from-zinc-50 to-white border-b border-hairline flex items-center justify-between shrink-0">
@@ -1036,6 +1174,193 @@ export default function LearnPage() {
                     <Send className="w-3.5 h-3.5" />
                   </button>
                 </form>
+              </div>
+            ) : (
+              <div className="flex-1 flex flex-col min-h-0 bg-canvas-soft">
+                {/* Notes Header & Sub-Tabs */}
+                <div className="px-4 py-3 bg-gradient-to-r from-zinc-50 to-white border-b border-hairline flex flex-col gap-2 shrink-0">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-ink font-mono uppercase tracking-widest flex items-center gap-1.5">
+                      <FileText className="w-3.5 h-3.5 text-zinc-550" /> Lesson Notes
+                    </span>
+                    {savingNote && (
+                      <span className="text-[9px] font-mono text-mute flex items-center gap-1">
+                        <Loader2 className="w-2.5 h-2.5 animate-spin" /> Saving...
+                      </span>
+                    )}
+                  </div>
+                  
+                  {/* Clean Vercel Sub-tabs inside notes */}
+                  <div className="flex border border-hairline rounded-lg p-0.5 bg-zinc-100/50 gap-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setNotesSubTab('edit')}
+                      className={`flex-1 text-center py-1 text-[10px] font-bold rounded-md transition-all cursor-pointer ${
+                        notesSubTab === 'edit'
+                          ? 'bg-white text-ink shadow-sm border border-hairline/10'
+                          : 'text-mute hover:text-ink hover:bg-zinc-200/50'
+                      }`}
+                    >
+                      Write
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setNotesSubTab('preview')}
+                      className={`flex-1 text-center py-1 text-[10px] font-bold rounded-md transition-all cursor-pointer ${
+                        notesSubTab === 'preview'
+                          ? 'bg-white text-ink shadow-sm border border-hairline/10'
+                          : 'text-mute hover:text-ink hover:bg-zinc-200/50'
+                      }`}
+                    >
+                      Preview
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNotesSubTab('all')
+                        fetchCourseNotes()
+                      }}
+                      className={`flex-1 text-center py-1 text-[10px] font-bold rounded-md transition-all cursor-pointer ${
+                        notesSubTab === 'all'
+                          ? 'bg-white text-ink shadow-sm border border-hairline/10'
+                          : 'text-mute hover:text-ink hover:bg-zinc-200/50'
+                      }`}
+                    >
+                      All Notes ({courseNotes.length})
+                    </button>
+                  </div>
+                </div>
+
+                {/* Sub-tab Views */}
+                <div className="flex-1 overflow-y-auto flex flex-col min-h-0 bg-white">
+                  {loadingNotes ? (
+                    <div className="flex-1 flex flex-col items-center justify-center p-4">
+                      <Loader2 className="w-5 h-5 animate-spin text-zinc-400" />
+                      <p className="text-[10px] text-mute font-mono mt-2 uppercase tracking-wider">Loading note...</p>
+                    </div>
+                  ) : notesSubTab === 'edit' ? (
+                    <div className="flex-1 flex flex-col p-4 space-y-3">
+                      <textarea
+                        value={noteContent}
+                        onChange={(e) => setNoteContent(e.target.value)}
+                        placeholder="Write your study notes for this lesson using Markdown (e.g. # Header, **bold**, - list)..."
+                        className="flex-1 w-full text-xs font-mono border border-hairline rounded-xl p-3 bg-zinc-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-zinc-500/10 focus:border-zinc-500 transition-all duration-200 resize-none leading-relaxed"
+                      />
+                      <button
+                        type="button"
+                        onClick={saveCurrentNote}
+                        disabled={savingNote}
+                        className="w-full bg-zinc-900 text-white hover:bg-zinc-800 disabled:opacity-50 text-xs font-semibold py-2 rounded-lg transition-all shrink-0 cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+                      >
+                        {savingNote ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving...
+                          </>
+                        ) : (
+                          <>
+                            <Check className="w-3.5 h-3.5" /> Save Note
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  ) : notesSubTab === 'preview' ? (
+                    <div className="flex-1 p-4 overflow-y-auto prose max-w-none text-xs text-zinc-800 leading-relaxed font-sans">
+                      <div 
+                        dangerouslySetInnerHTML={{ __html: renderMarkdown(noteContent) }}
+                        className="markdown-body space-y-2"
+                      />
+                      {noteContent.trim() && (
+                        <div className="mt-6 pt-4 border-t border-hairline flex items-center justify-between">
+                          <span className="text-[9px] text-mute font-mono uppercase tracking-wider">Saved in Markdown</span>
+                          <button
+                            onClick={() => setNotesSubTab('edit')}
+                            className="text-[10px] text-indigo-600 hover:text-indigo-800 font-bold transition-all cursor-pointer flex items-center gap-1"
+                          >
+                            <Edit2 className="w-3 h-3" /> Edit
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    /* All notes in course */
+                    <div className="flex-1 p-3 overflow-y-auto space-y-3 bg-zinc-50/50 no-scrollbar">
+                      <div className="flex items-center justify-between pb-1">
+                        <span className="text-[9px] font-bold text-mute uppercase font-mono tracking-widest">Notes in this course</span>
+                        <span className="text-[9px] text-mute font-mono">{courseNotes.length} lessons noted</span>
+                      </div>
+                      
+                      {courseNotes.length === 0 ? (
+                        <div className="text-center py-10 px-4 space-y-3 bg-white rounded-xl border border-hairline vercel-card-shadow">
+                          <span className="text-2xl">📝</span>
+                          <h5 className="font-bold text-xs text-ink">No notes found</h5>
+                          <p className="text-[10px] text-mute max-w-[180px] mx-auto leading-relaxed">
+                            Take notes on lessons in this course and they'll show up here!
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {courseNotes.map((noteItem) => {
+                            const isThisLesson = noteItem.lessonId?._id === currentLesson?._id;
+                            return (
+                              <div
+                                key={noteItem._id}
+                                className={`p-3 bg-white rounded-xl border border-hairline vercel-card-shadow transition-all duration-200 flex flex-col gap-2 ${
+                                  isThisLesson ? 'ring-2 ring-indigo-500/20 border-indigo-200' : 'hover:shadow-[0_4px_12px_rgba(0,0,0,0.02)]'
+                                }`}
+                              >
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="min-w-0">
+                                    <span className="text-[8px] font-bold font-mono text-indigo-600 uppercase tracking-widest block">
+                                      Lesson {noteItem.lessonId?.order != null ? noteItem.lessonId.order + 1 : ''}
+                                    </span>
+                                    <h5 className="font-semibold text-xs text-ink truncate" title={noteItem.lessonId?.title}>
+                                      {noteItem.lessonId?.title || 'Unknown Lesson'}
+                                    </h5>
+                                  </div>
+                                  <span className="text-[8px] text-mute shrink-0 font-mono">
+                                    {new Date(noteItem.updatedAt).toLocaleDateString(undefined, {
+                                      month: 'short',
+                                      day: 'numeric'
+                                    })}
+                                  </span>
+                                </div>
+                                <p className="text-[10px] text-mute line-clamp-2 leading-relaxed bg-zinc-50 p-1.5 rounded-lg border border-zinc-100 font-mono">
+                                  {noteItem.content || 'Empty note'}
+                                </p>
+                                <div className="flex items-center justify-between pt-1 border-t border-hairline">
+                                  {isThisLesson ? (
+                                    <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 uppercase tracking-wide">
+                                      Active Lesson
+                                    </span>
+                                  ) : (
+                                    <button
+                                      onClick={() => handleSelectNoteLesson(noteItem.lessonId?._id)}
+                                      className="text-[9px] font-bold text-indigo-600 hover:text-indigo-850 hover:underline transition-all cursor-pointer uppercase tracking-wider"
+                                    >
+                                      Go to Lesson &rarr;
+                                    </button>
+                                  )}
+                                  <button
+                                    onClick={() => {
+                                      if (isThisLesson) {
+                                        setNotesSubTab('preview');
+                                      } else {
+                                        handleSelectNoteLesson(noteItem.lessonId?._id);
+                                      }
+                                    }}
+                                    className="text-[9px] font-semibold text-zinc-600 hover:text-ink hover:underline transition-all cursor-pointer"
+                                  >
+                                    View full note
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </aside>
