@@ -10,14 +10,17 @@ interface ThemeContextValue {
   setTheme: (theme: Theme) => void
 }
 
-const ThemeContext = createContext<ThemeContextValue | null>(null)
+const ThemeContext = createContext<ThemeContextValue>({
+  theme: 'light',
+  toggleTheme: () => {},
+  setTheme: () => {},
+})
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>('light')
-  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    // On mount, check localStorage first, then system preference
+    // On mount, read localStorage then fall back to system preference
     const stored = localStorage.getItem('veolms-theme') as Theme | null
     if (stored === 'light' || stored === 'dark') {
       setThemeState(stored)
@@ -25,11 +28,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
       setThemeState(prefersDark ? 'dark' : 'light')
     }
-    setMounted(true)
   }, [])
 
   useEffect(() => {
-    if (!mounted) return
     const root = document.documentElement
     if (theme === 'dark') {
       root.classList.add('dark')
@@ -39,21 +40,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       root.setAttribute('data-theme', 'light')
     }
     localStorage.setItem('veolms-theme', theme)
-  }, [theme, mounted])
+  }, [theme])
 
-  const toggleTheme = () => {
-    setThemeState((prev) => (prev === 'light' ? 'dark' : 'light'))
-  }
+  const toggleTheme = () => setThemeState((prev) => (prev === 'light' ? 'dark' : 'light'))
+  const setTheme = (t: Theme) => setThemeState(t)
 
-  const setTheme = (t: Theme) => {
-    setThemeState(t)
-  }
-
-  // Prevent flash of unstyled content
-  if (!mounted) {
-    return <>{children}</>
-  }
-
+  // Always render the Provider — never bail out early without it.
+  // The anti-FOUC inline script in layout.tsx handles the initial class
+  // before React hydrates, so there's no flash.
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>
       {children}
@@ -62,7 +56,5 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 }
 
 export function useTheme(): ThemeContextValue {
-  const ctx = useContext(ThemeContext)
-  if (!ctx) throw new Error('useTheme must be used within ThemeProvider')
-  return ctx
+  return useContext(ThemeContext)
 }
