@@ -30,6 +30,7 @@ import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import { api } from '@/lib/api'
 import { Course } from '@/components/courses/CourseCard'
+import CourseReviews from '@/components/courses/CourseReviews'
 
 const TRUST_LOGOS = ['Google', 'Microsoft', 'Amazon', 'Spotify', 'Adobe']
 
@@ -706,6 +707,8 @@ export default function HomePage() {
 
         </div>
       </section>
+
+      <CourseReviews />
 
       {/* ── 7. Pricing Rhythm (Single course vs All-Access pass) ── */}
       <section className="bg-canvas-soft border-t border-b border-hairline py-24 w-full">

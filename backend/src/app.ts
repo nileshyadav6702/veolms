@@ -13,8 +13,10 @@ import progressRoutes from './routes/progress.routes';
 import adminRoutes from './routes/admin.routes';
 import aiChatRoutes from './routes/aiChat.routes';
 import noteRoutes from './routes/note.routes';
+import reviewRoutes from './routes/review.routes';
 
 export const app = express();
+
 
 // Trust reverse proxy (Render, AWS, Heroku, etc.)
 app.set('trust proxy', 1);
@@ -65,6 +67,7 @@ app.use('/api/progress', progressRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/ai-chats', aiChatRoutes);
 app.use('/api/notes', noteRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 app.use((_req, res) => res.status(404).json({ success: false, message: 'Route not found' }));
 
