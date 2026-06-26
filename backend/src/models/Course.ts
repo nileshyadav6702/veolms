@@ -6,6 +6,18 @@ export interface ISection {
   order: number;
 }
 
+export interface ICertificateTemplate {
+  title: string;
+  subTitle: string;
+  bodyText: string;
+  instructorName: string;
+  instructorTitle: string;
+  logoUrl?: string;
+  signatureUrl?: string;
+  primaryColor?: string;
+  accentColor?: string;
+}
+
 export interface ICourse extends Document {
   title: string;
   slug: string;
@@ -20,6 +32,7 @@ export interface ICourse extends Document {
   totalLessons: number;
   totalDuration: number;
   createdBy: Types.ObjectId;
+  certificateTemplate?: ICertificateTemplate;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -44,6 +57,17 @@ const courseSchema = new Schema<ICourse>(
     totalLessons: { type: Number, default: 0 },
     totalDuration: { type: Number, default: 0 },
     createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    certificateTemplate: {
+      title: { type: String, default: 'Certificate of Completion' },
+      subTitle: { type: String, default: 'This is to certify that' },
+      bodyText: { type: String, default: 'has successfully completed the course' },
+      instructorName: { type: String, default: '' },
+      instructorTitle: { type: String, default: '' },
+      logoUrl: { type: String, default: '' },
+      signatureUrl: { type: String, default: '' },
+      primaryColor: { type: String, default: '#000000' },
+      accentColor: { type: String, default: '#3b82f6' },
+    },
   },
   { timestamps: true }
 );

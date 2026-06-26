@@ -14,6 +14,7 @@ import adminRoutes from './routes/admin.routes';
 import aiChatRoutes from './routes/aiChat.routes';
 import noteRoutes from './routes/note.routes';
 import reviewRoutes from './routes/review.routes';
+import certificateRoutes from './routes/certificate.routes';
 
 export const app = express();
 
@@ -68,6 +69,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/ai-chats', aiChatRoutes);
 app.use('/api/notes', noteRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/certificates', certificateRoutes);
 
 app.use((_req, res) => res.status(404).json({ success: false, message: 'Route not found' }));
 

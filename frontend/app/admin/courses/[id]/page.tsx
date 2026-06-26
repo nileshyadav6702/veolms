@@ -21,6 +21,7 @@ import {
   UploadCloud,
   Play,
   Video,
+  Award,
 } from 'lucide-react'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
@@ -607,6 +608,17 @@ export default function CourseBuilderPage() {
           </div>
 
           <div className="flex items-center gap-2.5">
+            <Link href={`/admin/courses/${courseId}/certificate`}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-1.5 h-9 px-3 hover:bg-zinc-50 border-zinc-200 text-zinc-700 font-medium text-xs font-sans"
+                title="Configure Certificate Template"
+              >
+                <Award className="w-4 h-4 text-zinc-500" />
+                <span>Certificate</span>
+              </Button>
+            </Link>
             <Button
               variant="outline"
               size="sm"

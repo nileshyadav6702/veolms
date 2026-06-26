@@ -15,6 +15,7 @@ import {
   User,
   GraduationCap,
   Calendar,
+  Award,
 } from 'lucide-react'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
@@ -23,6 +24,7 @@ import Badge from '@/components/ui/Badge'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { api } from '@/lib/api'
 import CourseSpecificReviews from '@/components/courses/CourseSpecificReviews'
+import { useToast } from '@/lib/toast-context'
 
 interface Lesson {
   _id: string
@@ -58,16 +60,35 @@ export default function CourseCurriculumPage() {
   const router = useRouter()
   const params = useParams()
   const courseId = params.courseId as string
+  const toast = useToast()
 
   const [course, setCourse] = useState<CourseDetail | null>(null)
   const [lessons, setLessons] = useState<Lesson[]>([])
   const [completedLessons, setCompletedLessons] = useState<string[]>([])
+  const [certificate, setCertificate] = useState<any>(null)
+  const [claimingCert, setClaimingCert] = useState(false)
   
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   
   // Section toggle state
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({})
+
+  const handleClaimCertificate = async () => {
+    try {
+      setClaimingCert(true)
+      const res = await api.post(`/api/certificates/course/${courseId}/claim`, {})
+      if (res.success && res.certificate) {
+        setCertificate(res.certificate)
+        toast.success('Certificate claimed successfully! You can now view and download it.')
+      }
+    } catch (err: any) {
+      console.error(err)
+      toast.error(err.message || 'Failed to claim certificate.')
+    } finally {
+      setClaimingCert(false)
+    }
+  }
 
   const loadCourseData = useCallback(async () => {
     try {
@@ -106,6 +127,18 @@ export default function CourseCurriculumPage() {
       } catch {
         // Safe fallback
         setCompletedLessons([])
+      }
+
+      // Fetch certificate
+      try {
+        const certData = await api.get(`/api/certificates/course/${courseId}/my`)
+        if (certData.success && certData.claimed) {
+          setCertificate(certData.certificate)
+        } else {
+          setCertificate(null)
+        }
+      } catch {
+        setCertificate(null)
       }
 
       // Auto-open first section by default
@@ -388,6 +421,47 @@ export default function CourseCurriculumPage() {
                         <span>{completedCount > 0 ? 'Resume Learning' : 'Start Learning'}</span>
                       </Button>
                     </Link>
+                  )}
+
+                  {/* Certificate Claim/View Box */}
+                  {progressPercent === 100 && (
+                    <div className="border-t border-zinc-100 pt-4 mt-2 space-y-3">
+                      <h4 className="text-xs font-bold text-zinc-950 flex items-center gap-1.5">
+                        <Award className="w-4 h-4 text-emerald-500" />
+                        <span>Course Certificate</span>
+                      </h4>
+                      {certificate ? (
+                        <div className="space-y-2">
+                          <p className="text-[10px] text-zinc-500 leading-normal">
+                            Congratulations! Your official verified course completion certificate is ready.
+                          </p>
+                          <Link href={`/certificates/${certificate.certificateCode}`} target="_blank">
+                            <Button className="w-full justify-center h-10 text-xs font-bold gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm border-none cursor-pointer">
+                              <Award className="w-3.5 h-3.5" />
+                              <span>View Certificate</span>
+                            </Button>
+                          </Link>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <p className="text-[10px] text-zinc-500 leading-normal">
+                            You've completed all curriculum items! Claim your certificate to verify and showcase your achievement.
+                          </p>
+                          <Button
+                            onClick={handleClaimCertificate}
+                            disabled={claimingCert}
+                            className="w-full justify-center h-10 text-xs font-bold gap-1.5 bg-zinc-900 hover:bg-zinc-800 text-white shadow-sm border-none cursor-pointer"
+                          >
+                            {claimingCert ? (
+                              <Spinner className="w-3.5 h-3.5 text-white" />
+                            ) : (
+                              <Award className="w-3.5 h-3.5" />
+                            )}
+                            <span>Claim Certificate</span>
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
               </Card>
