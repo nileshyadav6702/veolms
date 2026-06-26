@@ -6,13 +6,17 @@ import {
   updateCertificateTemplate,
   getMyCertificate,
   claimCertificate,
-  verifyCertificate
+  verifyCertificate,
+  listMyCertificates
 } from '../controllers/certificate.controller';
 
 const router = Router();
 
 // Public verification route
 router.get('/verify/:code', verifyCertificate);
+
+// User certificates list
+router.get('/my', authenticate, listMyCertificates);
 
 // Course template and certificate routes
 router.get('/course/:courseId/template', authenticate, getCertificateTemplate);

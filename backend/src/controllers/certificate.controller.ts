@@ -235,3 +235,25 @@ export async function verifyCertificate(req: Request, res: Response): Promise<vo
     res.status(500).json({ success: false, message: 'Server error' });
   }
 }
+
+export async function listMyCertificates(req: Request, res: Response): Promise<void> {
+  try {
+    const userId = req.user!.id;
+    const certificates = await Certificate.find({ userId })
+      .populate('courseId', 'title thumbnail instructor shortDescription');
+
+    // Format course thumbnails
+    const formatted = certificates.map((cert) => {
+      const doc = cert.toObject();
+      const courseObj = doc.courseId as any;
+      if (courseObj && courseObj.thumbnail) {
+        courseObj.thumbnail = formatThumbnailUrl(courseObj.thumbnail, req);
+      }
+      return doc;
+    });
+
+    res.json({ success: true, certificates: formatted });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+}

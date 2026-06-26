@@ -18,7 +18,8 @@ import {
   CreditCard,
   GraduationCap,
   MessageSquare,
-  Settings
+  Settings,
+  Award
 } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Card from '@/components/ui/Card'
@@ -69,6 +70,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
   const navItems = [
     { label: 'My Learning', href: '/dashboard', icon: LayoutDashboard },
     { label: 'Explore Catalog', href: '/dashboard/courses', icon: Compass },
+    { label: 'My Certificates', href: '/dashboard/certificates', icon: Award },
     { label: 'Billing & Payments', href: '/dashboard/payments', icon: CreditCard },
     { label: 'AI Tutor Chat', href: '/dashboard/chat', icon: MessageSquare },
     { label: 'Account Settings', href: '/dashboard/settings', icon: Settings },
