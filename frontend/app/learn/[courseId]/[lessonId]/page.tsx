@@ -155,8 +155,11 @@ export default function LearnPage() {
   const [noteContent, setNoteContent] = useState('')
   const [courseNotes, setCourseNotes] = useState<any[]>([])
   const [notesSubTab, setNotesSubTab] = useState<'edit' | 'preview' | 'all'>('edit')
-  const [savingNote, setSavingNote] = useState(false)
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved' | 'error' | 'idle'>('idle')
   const [loadingNotes, setLoadingNotes] = useState(false)
+  
+  const lastFetchedContentRef = useRef<string | null>(null)
+  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   // Chat Assistant states
   const [chatMessages, setChatMessages] = useState<Array<{ sender: 'user' | 'ai'; text: string; timestamp: Date }>>([])
@@ -318,14 +321,20 @@ export default function LearnPage() {
   const fetchCurrentNote = useCallback(async (targetLessonId: string) => {
     try {
       setLoadingNotes(true)
+      setSaveStatus('idle')
       const data = await api.get(`/api/notes/lesson/${targetLessonId}`)
       if (data.note) {
         setNoteContent(data.note.content)
+        lastFetchedContentRef.current = data.note.content
+        setSaveStatus('saved')
       } else {
         setNoteContent('')
+        lastFetchedContentRef.current = ''
+        setSaveStatus('idle')
       }
     } catch (err) {
       console.error('Failed to load note:', err)
+      setSaveStatus('error')
     } finally {
       setLoadingNotes(false)
     }
@@ -342,21 +351,69 @@ export default function LearnPage() {
 
   const saveCurrentNote = async () => {
     if (!currentLesson) return
-    setSavingNote(true)
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current)
+    }
+    setSaveStatus('saving')
     try {
       await api.post('/api/notes', {
         courseId,
         lessonId: currentLesson._id,
         content: noteContent,
       })
+      lastFetchedContentRef.current = noteContent
+      setSaveStatus('saved')
       toast.success('Note saved successfully!')
       fetchCourseNotes()
     } catch (err: any) {
+      setSaveStatus('error')
       toast.error(err.message || 'Failed to save note')
-    } finally {
-      setSavingNote(false)
     }
   }
+
+  // Auto-save effect (saves after 3 seconds of no typing)
+  useEffect(() => {
+    if (
+      loadingNotes ||
+      lastFetchedContentRef.current === null ||
+      noteContent === lastFetchedContentRef.current
+    ) {
+      if (lastFetchedContentRef.current === null && !loadingNotes) {
+        lastFetchedContentRef.current = noteContent
+      }
+      return
+    }
+
+    setSaveStatus('unsaved')
+
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current)
+    }
+
+    autoSaveTimerRef.current = setTimeout(async () => {
+      if (!currentLesson) return
+      setSaveStatus('saving')
+      try {
+        await api.post('/api/notes', {
+          courseId,
+          lessonId: currentLesson._id,
+          content: noteContent,
+        })
+        lastFetchedContentRef.current = noteContent
+        setSaveStatus('saved')
+        fetchCourseNotes()
+      } catch (err) {
+        console.error('Auto-save failed:', err)
+        setSaveStatus('error')
+      }
+    }, 3000)
+
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current)
+      }
+    }
+  }, [noteContent, currentLesson, courseId, loadingNotes, fetchCourseNotes])
 
   const handleSelectNoteLesson = (targetLessonId: string) => {
     router.push(`/learn/${courseId}/${targetLessonId}`)
@@ -1183,9 +1240,25 @@ export default function LearnPage() {
                     <span className="text-[10px] font-bold text-ink font-mono uppercase tracking-widest flex items-center gap-1.5">
                       <FileText className="w-3.5 h-3.5 text-zinc-550" /> Lesson Notes
                     </span>
-                    {savingNote && (
+                    {saveStatus === 'saving' && (
                       <span className="text-[9px] font-mono text-mute flex items-center gap-1">
-                        <Loader2 className="w-2.5 h-2.5 animate-spin" /> Saving...
+                        <Loader2 className="w-2.5 h-2.5 animate-spin text-zinc-400" /> Saving...
+                      </span>
+                    )}
+                    {saveStatus === 'saved' && (
+                      <span className="text-[9px] font-mono text-emerald-600 bg-emerald-50 border border-emerald-100/50 rounded px-1.5 py-0.5 flex items-center gap-0.5">
+                        <Check className="w-2.5 h-2.5" /> Saved
+                      </span>
+                    )}
+                    {saveStatus === 'unsaved' && (
+                      <span className="text-[9px] font-mono text-amber-600 bg-amber-50 border border-amber-100/50 rounded px-1.5 py-0.5 flex items-center gap-0.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                        <span>Unsaved Changes</span>
+                      </span>
+                    )}
+                    {saveStatus === 'error' && (
+                      <span className="text-[9px] font-mono text-red-650 bg-red-50 border border-red-100/50 rounded px-1.5 py-0.5 flex items-center gap-0.5">
+                        <span>⚠️ Error</span>
                       </span>
                     )}
                   </div>
@@ -1249,10 +1322,10 @@ export default function LearnPage() {
                       <button
                         type="button"
                         onClick={saveCurrentNote}
-                        disabled={savingNote}
+                        disabled={saveStatus === 'saving'}
                         className="w-full bg-zinc-900 text-white hover:bg-zinc-800 disabled:opacity-50 text-xs font-semibold py-2 rounded-lg transition-all shrink-0 cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
                       >
-                        {savingNote ? (
+                        {saveStatus === 'saving' ? (
                           <>
                             <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving...
                           </>
