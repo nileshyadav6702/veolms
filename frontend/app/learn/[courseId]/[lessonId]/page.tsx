@@ -109,6 +109,39 @@ export default function LearnPage() {
   const [showKeyText, setShowKeyText] = useState(false)
   const [savingAiSettings, setSavingAiSettings] = useState(false)
 
+  // Resizable sidebar settings
+  const [sidebarWidth, setSidebarWidth] = useState(320)
+  const isResizingRef = useRef(false)
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isResizingRef.current) return
+    const newWidth = window.innerWidth - e.clientX
+    const maxAllowedWidth = Math.min(600, window.innerWidth * 0.8)
+    if (newWidth >= 280 && newWidth <= maxAllowedWidth) {
+      setSidebarWidth(newWidth)
+    }
+  }, [])
+
+  const stopResizing = useCallback(() => {
+    isResizingRef.current = false
+    document.removeEventListener('mousemove', handleMouseMove)
+    document.removeEventListener('mouseup', stopResizing)
+  }, [handleMouseMove])
+
+  const startResizing = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    isResizingRef.current = true
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', stopResizing)
+  }, [handleMouseMove, stopResizing])
+
+  useEffect(() => {
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', stopResizing)
+    }
+  }, [handleMouseMove, stopResizing])
+
   // Auto-scroll chat to bottom
   useEffect(() => {
     if (sidebarTab === 'ai') {
@@ -466,10 +499,10 @@ export default function LearnPage() {
 
   return (
     <ProtectedRoute>
-      <div className="flex font-sans min-h-full">
+      <div className="flex font-sans h-[calc(100vh-3.5rem)] md:h-screen overflow-hidden">
 
         {/* ── Main content column ── */}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 overflow-y-auto h-full custom-scrollbar">
 
           {/* Video — dark bg for immersive playback */}
           <div className="bg-zinc-950 px-4 sm:px-8 lg:px-12 py-5 border-b border-zinc-900">
@@ -607,11 +640,16 @@ export default function LearnPage() {
 
           {/* ── Course curriculum sidebar ── */}
           <aside
-            className={`w-80 shrink-0 bg-white border-l border-hairline sticky top-0 self-start flex flex-col transition-all duration-200 ${
+            className={`relative shrink-0 bg-white border-l border-hairline flex flex-col h-full transition-all duration-150 ${
               sidebarOpen ? '' : 'hidden'
             }`}
-            style={{ height: '100vh' }}
+            style={{ width: `${sidebarWidth}px` }}
           >
+            {/* Drag handle for resizing */}
+            <div
+              onMouseDown={startResizing}
+              className="absolute top-0 left-0 bottom-0 w-1.5 cursor-col-resize hover:bg-indigo-500/20 active:bg-indigo-500 transition-colors z-30"
+            />
             {/* Tab Switched Header */}
             <div className="h-14 flex border-b border-hairline shrink-0">
               <button
