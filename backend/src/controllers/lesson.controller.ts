@@ -562,6 +562,20 @@ export async function getLessonChatHistory(req: Request, res: Response): Promise
       return;
     }
 
+    if (!lesson.isPreview) {
+      if (req.user.role !== 'admin') {
+        const enrollment = await Enrollment.findOne({
+          userId: req.user.id,
+          courseId: lesson.courseId,
+          paymentStatus: 'paid',
+        });
+        if (!enrollment) {
+          res.status(403).json({ success: false, message: 'Not enrolled in this course' });
+          return;
+        }
+      }
+    }
+
     const messages = await ChatMessage.find({ userId: req.user.id, lessonId: lesson._id }).sort({ createdAt: 1 });
     res.json({
       success: true,
