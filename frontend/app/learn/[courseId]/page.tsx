@@ -22,6 +22,7 @@ import Spinner from '@/components/ui/Spinner'
 import Badge from '@/components/ui/Badge'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { api } from '@/lib/api'
+import CourseSpecificReviews from '@/components/courses/CourseSpecificReviews'
 
 interface Lesson {
   _id: string
@@ -333,6 +334,11 @@ export default function CourseCurriculumPage() {
                     <p className="text-zinc-500 text-xs italic">No syllabus sections available for this course.</p>
                   </div>
                 )}
+              </div>
+
+              {/* Reviews Section */}
+              <div className="border-t border-hairline pt-8">
+                <CourseSpecificReviews courseId={courseId} isEnrolled={true} />
               </div>
             </div>
 

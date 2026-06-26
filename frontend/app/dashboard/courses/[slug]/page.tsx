@@ -28,6 +28,7 @@ import { useAuth } from '@/lib/auth-context'
 import { useToast } from '@/lib/toast-context'
 import Script from 'next/script'
 import Input from '@/components/ui/Input'
+import CourseSpecificReviews from '@/components/courses/CourseSpecificReviews'
 
 interface CourseDetail {
   _id: string
@@ -58,7 +59,9 @@ export default function DashboardCourseDetailPage() {
   const [loading, setLoading] = useState(true)
   const [enrollLoading, setEnrollLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<'overview' | 'curriculum'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'curriculum' | 'reviews'>('overview')
+  const [reviewsCount, setReviewsCount] = useState(0)
+  const [courseRating, setCourseRating] = useState(4.8)
 
   // Preview video state
   const [previewLesson, setPreviewLesson] = useState<Lesson | null>(null)
@@ -89,6 +92,22 @@ export default function DashboardCourseDetailPage() {
         const enrollData = await api.get(`/api/enrollments/${data.course._id}`)
         setIsEnrolled(enrollData.enrolled)
         setEnrollmentDetails(enrollData.enrollment)
+      }
+
+      // Fetch reviews summary
+      try {
+        const reviewsData = await api.get(`/api/reviews?courseId=${data.course._id}`)
+        if (reviewsData.success) {
+          setReviewsCount(reviewsData.reviews.length)
+          if (reviewsData.reviews.length > 0) {
+            const avg = reviewsData.reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / reviewsData.reviews.length
+            setCourseRating(Number(avg.toFixed(1)))
+          } else {
+            setCourseRating(0)
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load course reviews summary:', err)
       }
     } catch (err: any) {
       setError(err.message || 'Failed to load course details.')
@@ -397,10 +416,17 @@ export default function DashboardCourseDetailPage() {
                 <Clock className="w-4 h-4 text-zinc-400" />
                 <span>{totalDurationMin} mins total</span>
               </div>
-              <div className="flex items-center gap-1 text-amber-600">
-                <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
-                <span>4.8 rating</span>
-              </div>
+              {reviewsCount > 0 ? (
+                <div className="flex items-center gap-1 text-amber-600">
+                  <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
+                  <span>{courseRating} ({reviewsCount} {reviewsCount === 1 ? 'review' : 'reviews'})</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1 text-zinc-500 font-medium">
+                  <Star className="w-4 h-4 text-zinc-300" />
+                  <span>No reviews yet</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -427,6 +453,16 @@ export default function DashboardCourseDetailPage() {
               >
                 Curriculum ({lessons.length})
               </button>
+              <button
+                onClick={() => setActiveTab('reviews')}
+                className={`py-3 px-4 text-xs font-mono uppercase tracking-wider font-bold border-b-2 transition-colors ${
+                  activeTab === 'reviews'
+                    ? 'border-indigo-600 text-indigo-700'
+                    : 'border-transparent text-gray-500 hover:text-gray-900'
+                }`}
+              >
+                Reviews ({reviewsCount})
+              </button>
             </div>
 
             {activeTab === 'overview' ? (
@@ -436,13 +472,21 @@ export default function DashboardCourseDetailPage() {
                   {course.description}
                 </div>
               </div>
-            ) : (
+            ) : activeTab === 'curriculum' ? (
               <CurriculumList
                 sections={course.sections}
                 lessons={lessons}
                 isEnrolled={isEnrolled}
                 onLessonClick={handleCurriculumLessonClick}
                 onPreviewClick={handlePreviewPlay}
+              />
+            ) : (
+              <CourseSpecificReviews
+                courseId={course._id}
+                isEnrolled={isEnrolled}
+                onReviewUpdated={() => {
+                  loadCourseData()
+                }}
               />
             )}
           </div>
