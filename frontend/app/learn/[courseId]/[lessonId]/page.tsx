@@ -149,11 +149,28 @@ export default function LearnPage() {
     }
   }, [chatMessages, chatLoading, sidebarTab])
 
-  // Reset chat on lesson switch
+  // Load chat history on lesson switch
   useEffect(() => {
+    if (!currentLesson) return
+    const fetchChatHistory = async () => {
+      try {
+        const data = await api.get(`/api/lessons/${currentLesson._id}/chat`)
+        if (data.history) {
+          setChatMessages(data.history.map((h: any) => ({
+            sender: h.sender,
+            text: h.text,
+            timestamp: new Date(h.createdAt)
+          })))
+        }
+      } catch (err) {
+        console.error('Failed to load chat history:', err)
+      }
+    }
+    
     setChatMessages([])
     setChatInput('')
     setChatLoading(false)
+    fetchChatHistory()
   }, [currentLesson])
 
   // Fetch course, lessons, and student progress on mount / param changes
@@ -379,14 +396,8 @@ export default function LearnPage() {
     setChatLoading(true)
 
     try {
-      const history = chatMessages.map((msg) => ({
-        sender: msg.sender,
-        text: msg.text
-      }))
-
       const response = await api.post(`/api/lessons/${currentLesson._id}/chat`, {
         message: userMessageText,
-        history,
         provider: aiProvider,
         model: aiModel
       })
@@ -445,14 +456,8 @@ export default function LearnPage() {
     setChatLoading(true)
 
     try {
-      const history = chatMessages.map((msg) => ({
-        sender: msg.sender,
-        text: msg.text
-      }))
-
       const response = await api.post(`/api/lessons/${currentLesson._id}/chat`, {
         message: questionText,
-        history,
         provider: aiProvider,
         model: aiModel
       })
@@ -502,7 +507,7 @@ export default function LearnPage() {
       <div className="flex font-sans h-[calc(100vh-3.5rem)] md:h-screen overflow-hidden">
 
         {/* ── Main content column ── */}
-        <div className="flex-1 min-w-0 overflow-y-auto h-full custom-scrollbar">
+        <div className="flex-1 min-w-0 overflow-y-auto h-full no-scrollbar">
 
           {/* Video — dark bg for immersive playback */}
           <div className="bg-zinc-950 px-4 sm:px-8 lg:px-12 py-5 border-b border-zinc-900">
@@ -683,7 +688,7 @@ export default function LearnPage() {
             </div>
 
             {sidebarTab === 'syllabus' ? (
-              <div className="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar">
+              <div className="flex-1 overflow-y-auto p-3 space-y-2 no-scrollbar">
                 {course?.sections.map((section, idx) => {
                   const sectionLessons = lessons.filter((l) => l.sectionId === section._id)
                   const isExpanded = !!expandedSections[section._id]
@@ -900,7 +905,7 @@ export default function LearnPage() {
                 ) : null}
 
                 {/* Message Log */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4 flex flex-col min-h-0 custom-scrollbar bg-canvas-soft">
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 flex flex-col min-h-0 no-scrollbar bg-canvas-soft">
                   {chatMessages.length === 0 ? (
                     <div className="flex-1 flex flex-col items-center justify-center text-center p-4 space-y-6">
                       {/* Bouncing concentric rings for empty state logo */}
