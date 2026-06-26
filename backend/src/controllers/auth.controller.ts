@@ -142,6 +142,12 @@ export async function logout(req: Request, res: Response): Promise<void> {
   }
 }
 
+const updateAiSettingsSchema = z.object({
+  provider: z.enum(['gemini', 'openai']),
+  model: z.string().min(1),
+  apiKey: z.string().optional().nullable(),
+});
+
 export async function me(req: Request, res: Response): Promise<void> {
   try {
     const user = await User.findById(req.user!.id).select('-passwordHash');
@@ -149,8 +155,56 @@ export async function me(req: Request, res: Response): Promise<void> {
       res.status(404).json({ success: false, message: 'User not found' });
       return;
     }
-    res.json({ success: true, user });
+
+    const userObj = user.toObject() as any;
+    if (userObj.aiSettings) {
+      const rawUser = await User.findById(user._id).select('+aiSettings.apiKey');
+      userObj.aiSettings.hasKey = !!rawUser?.aiSettings?.apiKey;
+    }
+
+    res.json({ success: true, user: userObj });
   } catch {
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+}
+
+export async function updateAiSettings(req: Request, res: Response): Promise<void> {
+  try {
+    const { provider, model, apiKey } = updateAiSettingsSchema.parse(req.body);
+    const updateData: any = {
+      'aiSettings.provider': provider,
+      'aiSettings.model': model,
+    };
+
+    if (apiKey === null || apiKey === '') {
+      updateData['aiSettings.apiKey'] = null;
+    } else if (apiKey !== undefined) {
+      updateData['aiSettings.apiKey'] = apiKey;
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user!.id,
+      { $set: updateData },
+      { new: true }
+    ).select('-passwordHash');
+
+    if (!user) {
+      res.status(404).json({ success: false, message: 'User not found' });
+      return;
+    }
+
+    const userObj = user.toObject() as any;
+    if (userObj.aiSettings) {
+      const rawUser = await User.findById(user._id).select('+aiSettings.apiKey');
+      userObj.aiSettings.hasKey = !!rawUser?.aiSettings?.apiKey;
+    }
+
+    res.json({ success: true, user: userObj });
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      res.status(400).json({ success: false, message: 'Validation error', errors: err.flatten().fieldErrors });
+      return;
+    }
     res.status(500).json({ success: false, message: 'Server error' });
   }
 }

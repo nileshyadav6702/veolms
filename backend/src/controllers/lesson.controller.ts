@@ -5,6 +5,10 @@ import { Lesson } from '../models/Lesson';
 import { Course } from '../models/Course';
 import { Enrollment } from '../models/Enrollment';
 import { getPresignedGetUrl, deleteObject, getObjectStream } from '../services/r2.service';
+import { GoogleGenAI } from '@google/genai';
+import { OpenAI } from 'openai';
+import { getCleanTranscript } from '../services/transcript.service';
+import { User } from '../models/User';
 
 
 const lessonSchema = z.object({
@@ -393,5 +397,131 @@ export async function getLessonSubtitle(req: Request, res: Response): Promise<vo
     stream.pipe(res);
   } catch {
     res.status(500).json({ success: false, message: 'Server error retrieving subtitles' });
+  }
+}
+
+export async function chatWithLessonAssistant(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    const { message, history = [], provider: clientProvider, model: clientModel } = req.body;
+
+    if (!message) {
+      res.status(400).json({ success: false, message: 'Message is required' });
+      return;
+    }
+
+    const lesson = await Lesson.findById(id);
+    if (!lesson) {
+      res.status(404).json({ success: false, message: 'Lesson not found' });
+      return;
+    }
+
+    // Check enrollment unless it's a preview lesson
+    if (!lesson.isPreview) {
+      if (!req.user) {
+        res.status(401).json({ success: false, message: 'Authentication required' });
+        return;
+      }
+      if (req.user.role !== 'admin') {
+        const enrollment = await Enrollment.findOne({
+          userId: req.user.id,
+          courseId: lesson.courseId,
+          paymentStatus: 'paid',
+        });
+        if (!enrollment) {
+          res.status(403).json({ success: false, message: 'Not enrolled in this course' });
+          return;
+        }
+      }
+    }
+
+    // 1. Fetch transcript if available
+    let transcript = '';
+    const subtitle = lesson.subtitles?.find(s => s.lang === 'en') || lesson.subtitles?.[0];
+    if (subtitle?.vttKey) {
+      transcript = await getCleanTranscript(subtitle.vttKey);
+    }
+
+    // 2. Load student's profile to resolve settings
+    const student = await User.findById(req.user!.id).select('+aiSettings.apiKey');
+    
+    // Choose provider and model
+    const provider = clientProvider || student?.aiSettings?.provider || 'gemini';
+    const model = clientModel || student?.aiSettings?.model || (provider === 'gemini' ? 'gemini-1.5-flash' : 'gpt-4o-mini');
+
+    // Resolve API Key
+    let apiKey = '';
+    if (student?.aiSettings?.provider === provider && student?.aiSettings?.apiKey) {
+      apiKey = student.aiSettings.apiKey;
+    } else {
+      apiKey = provider === 'gemini' ? (process.env.GEMINI_API_KEY || '') : (process.env.OPENAI_API_KEY || '');
+    }
+
+    if (!apiKey) {
+      res.status(400).json({
+        success: false,
+        message: `API key for provider "${provider}" is not configured. Please supply an API key in your Profile Settings or contact the administrator.`
+      });
+      return;
+    }
+
+    // 3. System Instruction
+    const systemInstruction = `You are a helpful and knowledgeable AI Course Assistant for the video lesson titled "${lesson.title}".
+Your goal is to answer the student's question about this lesson. You are provided with the lesson description and a clean transcript of the video speech.
+
+Lesson Description:
+"${lesson.description || 'No description provided.'}"
+
+Video Speech Transcript:
+---
+${transcript || 'No transcript/subtitles are available for this video lesson. Answer using general knowledge about the topic, but note that you do not have the exact video transcript.'}
+---
+
+Instructions:
+- Keep your answers concise, educational, clear, and direct.
+- Ground your answers in what the instructor says in the transcript whenever possible.
+- If the student's question is completely irrelevant to the course or lesson topic, politely guide them back to the lesson.
+- Use markdown formatting for lists, code snippets, or bold text to make it easy to read.`;
+
+    let reply = '';
+
+    if (provider === 'gemini') {
+      const ai = new GoogleGenAI({ apiKey });
+      const geminiHistory = history.map((h: any) => ({
+        role: h.sender === 'user' ? 'user' : 'model',
+        parts: [{ text: h.text }]
+      }));
+
+      const response = await ai.models.generateContent({
+        model: model,
+        contents: [...geminiHistory, { role: 'user', parts: [{ text: message }] }],
+        config: { systemInstruction }
+      });
+      reply = response.text || '';
+    } else if (provider === 'openai') {
+      const openai = new OpenAI({ apiKey });
+      const openaiHistory = history.map((h: any) => ({
+        role: h.sender === 'user' ? 'user' as const : 'assistant' as const,
+        content: h.text
+      }));
+
+      const response = await openai.chat.completions.create({
+        model: model,
+        messages: [
+          { role: 'system', content: systemInstruction },
+          ...openaiHistory,
+          { role: 'user', content: message }
+        ]
+      });
+      reply = response.choices[0]?.message?.content || '';
+    } else {
+      res.status(400).json({ success: false, message: `Unsupported provider: ${provider}` });
+      return;
+    }
+
+    res.json({ success: true, reply });
+  } catch (error: any) {
+    console.error('[AI Chat Assistant Error]:', error);
+    res.status(500).json({ success: false, message: error.message || 'AI generation failed' });
   }
 }

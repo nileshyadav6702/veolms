@@ -7,6 +7,11 @@ export interface IUser extends Document {
   role: 'student' | 'admin';
   avatar?: string;
   lastLogin?: Date;
+  aiSettings?: {
+    provider: 'gemini' | 'openai';
+    model: string;
+    apiKey?: string;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -19,6 +24,11 @@ const userSchema = new Schema<IUser>(
     role: { type: String, enum: ['student', 'admin'], default: 'student' },
     avatar: { type: String },
     lastLogin: { type: Date },
+    aiSettings: {
+      provider: { type: String, enum: ['gemini', 'openai'], default: 'gemini' },
+      model: { type: String, default: 'gemini-1.5-flash' },
+      apiKey: { type: String, select: false },
+    },
   },
   { timestamps: true }
 );
