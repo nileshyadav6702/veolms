@@ -17,6 +17,7 @@ import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import Spinner from '@/components/ui/Spinner'
 import Badge from '@/components/ui/Badge'
+import LearningStreakChart from '@/components/ui/LearningStreakChart'
 import { api } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
 
@@ -213,6 +214,9 @@ export default function StudentDashboardPage() {
           </div>
         </Card>
       </div>
+
+      {/* Learning Streak Heatmap */}
+      <LearningStreakChart />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         {/* Enrolled Courses list */}
