@@ -208,3 +208,39 @@ export async function updateAiSettings(req: Request, res: Response): Promise<voi
     res.status(500).json({ success: false, message: 'Server error' });
   }
 }
+
+export async function getSessions(req: Request, res: Response): Promise<void> {
+  try {
+    if (!req.user) {
+      res.status(401).json({ success: false, message: 'Authentication required' });
+      return;
+    }
+
+    const sessions = await Session.find({ userId: req.user.id }).sort({ lastActive: -1 });
+    res.json({ success: true, sessions });
+  } catch (err) {
+    console.error('[Get Sessions Error]:', err);
+    res.status(500).json({ success: false, message: 'Server error retrieving sessions' });
+  }
+}
+
+export async function revokeSession(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    if (!req.user) {
+      res.status(401).json({ success: false, message: 'Authentication required' });
+      return;
+    }
+
+    const session = await Session.findOneAndDelete({ _id: id, userId: req.user.id });
+    if (!session) {
+      res.status(404).json({ success: false, message: 'Session not found' });
+      return;
+    }
+
+    res.json({ success: true, message: 'Session terminated successfully' });
+  } catch (err) {
+    console.error('[Revoke Session Error]:', err);
+    res.status(500).json({ success: false, message: 'Server error revoking session' });
+  }
+}

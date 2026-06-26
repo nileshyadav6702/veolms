@@ -17,7 +17,8 @@ import {
   ChevronRight,
   CreditCard,
   GraduationCap,
-  MessageSquare
+  MessageSquare,
+  Settings
 } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Card from '@/components/ui/Card'
@@ -70,6 +71,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
     { label: 'Explore Catalog', href: '/dashboard/courses', icon: Compass },
     { label: 'Billing & Payments', href: '/dashboard/payments', icon: CreditCard },
     { label: 'AI Tutor Chat', href: '/dashboard/chat', icon: MessageSquare },
+    { label: 'Account Settings', href: '/dashboard/settings', icon: Settings },
   ]
 
   // Redirect to login if user session is cleared

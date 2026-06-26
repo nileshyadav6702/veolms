@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { signup, login, logout, me, updateAiSettings } from '../controllers/auth.controller';
+import { signup, login, logout, me, updateAiSettings, getSessions, revokeSession } from '../controllers/auth.controller';
 import { authenticate } from '../middleware/authenticate';
 
 const router = Router();
@@ -9,5 +9,7 @@ router.post('/login', login);
 router.post('/logout', authenticate, logout);
 router.get('/me', authenticate, me);
 router.put('/ai-settings', authenticate, updateAiSettings);
+router.get('/sessions', authenticate, getSessions);
+router.delete('/sessions/:id', authenticate, revokeSession);
 
 export default router;

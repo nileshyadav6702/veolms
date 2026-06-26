@@ -89,4 +89,72 @@ describe('Auth Routes', () => {
       expect(res.status).toBe(401);
     });
   });
+
+  describe('Sessions Management', () => {
+    let token: string;
+
+    beforeEach(async () => {
+      const signup = await request(app).post('/api/auth/signup').send({
+        name: 'Test User',
+        email: 'test@example.com',
+        password: 'Password123!',
+      });
+      token = signup.body.token;
+    });
+
+    describe('GET /api/auth/sessions', () => {
+      it('requires authentication', async () => {
+        const res = await request(app).get('/api/auth/sessions');
+        expect(res.status).toBe(401);
+      });
+
+      it('returns active sessions for the user', async () => {
+        const res = await request(app)
+          .get('/api/auth/sessions')
+          .set('Authorization', `Bearer ${token}`);
+
+        expect(res.status).toBe(200);
+        expect(res.body.success).toBe(true);
+        expect(res.body.sessions).toHaveLength(1);
+        expect(res.body.sessions[0].deviceInfo).toBeDefined();
+      });
+    });
+
+    describe('DELETE /api/auth/sessions/:id', () => {
+      it('requires authentication', async () => {
+        const res = await request(app).delete('/api/auth/sessions/some-id');
+        expect(res.status).toBe(401);
+      });
+
+      it('revokes the session successfully', async () => {
+        const getRes = await request(app)
+          .get('/api/auth/sessions')
+          .set('Authorization', `Bearer ${token}`);
+        const session = getRes.body.sessions[0];
+
+        const res = await request(app)
+          .delete(`/api/auth/sessions/${session._id}`)
+          .set('Authorization', `Bearer ${token}`);
+
+        expect(res.status).toBe(200);
+        expect(res.body.success).toBe(true);
+
+        const checkRes = await request(app)
+          .get('/api/auth/sessions')
+          .set('Authorization', `Bearer ${token}`);
+        expect(checkRes.status).toBe(401);
+
+        const dbSession = await (require('../src/models/Session').Session).findById(session._id);
+        expect(dbSession).toBeNull();
+      });
+
+      it('returns 404 for invalid/missing session ID', async () => {
+        const fakeId = new (require('mongoose').Types.ObjectId)();
+        const res = await request(app)
+          .delete(`/api/auth/sessions/${fakeId}`)
+          .set('Authorization', `Bearer ${token}`);
+        expect(res.status).toBe(404);
+      });
+    });
+  });
 });
