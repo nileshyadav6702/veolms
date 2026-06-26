@@ -10,6 +10,7 @@ import {
   BookOpen,
   Users,
   CreditCard,
+  Ticket,
   ExternalLink,
   LogOut,
   Menu,
@@ -58,6 +59,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { label: 'Course Catalog', href: '/admin/courses', icon: BookOpen },
     { label: 'Student Registry', href: '/admin/students', icon: Users },
     { label: 'Enrollment Ledger', href: '/admin/enrollments', icon: CreditCard },
+    { label: 'Discount Coupons', href: '/admin/coupons', icon: Ticket },
   ]
 
   const handleLogout = () => {

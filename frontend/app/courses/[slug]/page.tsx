@@ -13,6 +13,8 @@ import {
   Play,
   X,
   Sparkles,
+  Tag,
+  Ticket,
 } from 'lucide-react'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
@@ -24,6 +26,7 @@ import CurriculumList, { Lesson, Section } from '@/components/courses/Curriculum
 import VideoPlayer from '@/components/video/VideoPlayer'
 import { api } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
+import { useToast } from '@/lib/toast-context'
 import Script from 'next/script'
 import Input from '@/components/ui/Input'
 
@@ -47,6 +50,7 @@ export default function CourseDetailPage() {
   const slug = params.slug as string
   const router = useRouter()
   const { user } = useAuth()
+  const toast = useToast()
 
   const [course, setCourse] = useState<CourseDetail | null>(null)
   const [lessons, setLessons] = useState<Lesson[]>([])
@@ -67,6 +71,12 @@ export default function CourseDetailPage() {
   const [showMockGateway, setShowMockGateway] = useState(false)
   const [mockOrderId, setMockOrderId] = useState('')
   const [mockProcessing, setMockProcessing] = useState(false)
+
+  // Coupon states
+  const [couponCode, setCouponCode] = useState('')
+  const [appliedCoupon, setAppliedCoupon] = useState<any | null>(null)
+  const [applyingCoupon, setApplyingCoupon] = useState(false)
+  const [couponError, setCouponError] = useState<string | null>(null)
 
   const loadCourseData = useCallback(async () => {
     try {
@@ -91,6 +101,31 @@ export default function CourseDetailPage() {
   useEffect(() => {
     loadCourseData()
   }, [loadCourseData])
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return
+    try {
+      setApplyingCoupon(true)
+      setCouponError(null)
+      const res = await api.post('/api/payments/apply-coupon', {
+        courseId: course?._id,
+        code: couponCode.trim(),
+      })
+      setAppliedCoupon(res)
+      toast.success('Coupon applied successfully!')
+    } catch (err: any) {
+      setCouponError(err.message || 'Invalid coupon code')
+      setAppliedCoupon(null)
+    } finally {
+      setApplyingCoupon(false)
+    }
+  }
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null)
+    setCouponCode('')
+    setCouponError(null)
+  }
 
   const handleEnroll = async () => {
     if (!user) {
@@ -134,7 +169,18 @@ export default function CourseDetailPage() {
 
       const data = await api.post('/api/payments/create-order', {
         courseId: course._id,
+        couponCode: appliedCoupon ? appliedCoupon.couponCode : undefined,
       })
+
+      if (data.free) {
+        // Complete enrollment immediately for 100% discount
+        setIsEnrolled(true)
+        setEnrollmentDetails(data.enrollment)
+        toast.success('Course check-out successful!')
+        router.push('/dashboard')
+        setEnrollLoading(false)
+        return
+      }
 
       const orderId = data.order.id
 
@@ -166,7 +212,7 @@ export default function CourseDetailPage() {
             setIsEnrolled(true)
             router.push('/dashboard')
           } catch (err: any) {
-            alert(err.message || 'Payment verification failed')
+            toast.error(err.message || 'Payment verification failed')
           } finally {
             setEnrollLoading(false)
           }
@@ -189,7 +235,7 @@ export default function CourseDetailPage() {
       rzp.open()
       setEnrollLoading(false)
     } catch (err: any) {
-      alert(err.message || 'Failed to initialize enrollment.')
+      toast.error(err.message || 'Failed to initialize enrollment.')
       setEnrollLoading(false)
     }
   }
@@ -400,10 +446,10 @@ export default function CourseDetailPage() {
                 <div className="p-6">
                   <div className="flex items-baseline gap-2 mb-4">
                     <span className="text-3xl font-extrabold text-gray-900">
-                      ₹{course.price}
+                      ₹{appliedCoupon ? appliedCoupon.finalPrice : course.price}
                     </span>
                     <span className="text-sm text-gray-400 line-through">
-                      ₹{Math.round(course.price * 3.5)}
+                      ₹{Math.round((appliedCoupon ? appliedCoupon.originalPrice : course.price) * 3.5)}
                     </span>
                   </div>
 
@@ -427,8 +473,18 @@ export default function CourseDetailPage() {
                           <span className="text-emerald-600 font-bold uppercase text-[10px]">Paid</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-mute">Price Paid</span>
-                          <span className="font-semibold text-primary">₹{course.price}</span>
+                          <span className="text-mute">Original Price</span>
+                          <span className="font-semibold text-primary">₹{enrollmentDetails?.originalPrice ?? course.price}</span>
+                        </div>
+                        {enrollmentDetails?.couponCode && (
+                          <div className="flex justify-between text-emerald-600 font-bold text-[11px]">
+                            <span>Coupon ({enrollmentDetails.couponCode})</span>
+                            <span>-₹{enrollmentDetails.discountAmount}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between border-t border-dashed border-hairline pt-1.5 mt-1 text-xs font-bold text-zinc-950">
+                          <span>Price Paid</span>
+                          <span>₹{enrollmentDetails?.paidPrice ?? enrollmentDetails?.price ?? course.price}</span>
                         </div>
                         {enrollmentDetails?.razorpayPaymentId && (
                           <div className="flex justify-between">
@@ -445,13 +501,79 @@ export default function CourseDetailPage() {
                       </div>
                     </>
                   ) : (
-                    <Button
-                      onClick={handleEnroll}
-                      loading={enrollLoading}
-                      className="w-full justify-center"
-                    >
-                      {user ? 'Enroll Now' : 'Log in to Enroll'}
-                    </Button>
+                    <>
+                      {/* Coupon section */}
+                      {user && (
+                        <div className="mb-4 pt-4 border-t border-hairline">
+                          {!appliedCoupon ? (
+                            <div className="space-y-2">
+                              <label className="block text-xs font-semibold text-zinc-700">Promo Code</label>
+                              <div className="flex gap-2">
+                                <input
+                                  type="text"
+                                  placeholder="Enter coupon code"
+                                  value={couponCode}
+                                  onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                  className="flex-1 h-9 px-3 border border-hairline rounded-lg text-xs uppercase tracking-wide focus:outline-none focus:ring-1 focus:ring-primary focus:border-transparent bg-white text-zinc-800"
+                                />
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  onClick={handleApplyCoupon}
+                                  loading={applyingCoupon}
+                                  className="h-9 px-3 cursor-pointer text-xs"
+                                >
+                                  Apply
+                                </Button>
+                              </div>
+                              {couponError && (
+                                <p className="text-[10px] text-red-500 font-medium">{couponError}</p>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="bg-canvas-soft border border-hairline rounded-xl p-3 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="flex items-center gap-1.5 text-xs font-bold text-zinc-800">
+                                  <Tag className="w-3.5 h-3.5 text-emerald-600" />
+                                  <span className="font-mono">{appliedCoupon.couponCode}</span>
+                                </span>
+                                <button
+                                  onClick={handleRemoveCoupon}
+                                  className="text-mute hover:text-ink cursor-pointer"
+                                  title="Remove coupon"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                              <div className="h-px bg-hairline" />
+                              <div className="space-y-1 text-[11px] font-medium text-zinc-700">
+                                <div className="flex justify-between">
+                                  <span className="text-mute">Original Price</span>
+                                  <span>₹{appliedCoupon.originalPrice}</span>
+                                </div>
+                                <div className="flex justify-between text-emerald-600 font-bold">
+                                  <span>Discount</span>
+                                  <span>-₹{appliedCoupon.discountAmount}</span>
+                                </div>
+                                <div className="h-px bg-hairline my-1" />
+                                <div className="flex justify-between text-xs font-bold text-zinc-950">
+                                  <span>Final Price</span>
+                                  <span>₹{appliedCoupon.finalPrice}</span>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      <Button
+                        onClick={handleEnroll}
+                        loading={enrollLoading}
+                        className="w-full justify-center"
+                      >
+                        {user ? 'Enroll Now' : 'Log in to Enroll'}
+                      </Button>
+                    </>
                   )}
 
                   <p className="text-[11px] text-gray-400 text-center mt-3 leading-relaxed">
@@ -540,7 +662,7 @@ export default function CourseDetailPage() {
                 <p className="text-[10px] text-mute font-bold uppercase tracking-wider font-mono">Invoice Summary</p>
                 <div className="flex justify-between items-center text-sm font-bold">
                   <span className="text-primary truncate max-w-[220px]">{course?.title}</span>
-                  <span className="text-primary">₹{course?.price}</span>
+                  <span className="text-primary">₹{appliedCoupon ? appliedCoupon.finalPrice : course?.price}</span>
                 </div>
                 <div className="flex justify-between items-center text-[10px] text-mute font-mono mt-1">
                   <span>Order Ref</span>

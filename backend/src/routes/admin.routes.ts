@@ -10,6 +10,13 @@ import {
   deleteStudent,
   revokeStudentSession
 } from '../controllers/admin.controller';
+import {
+  createCoupon,
+  getCoupons,
+  getCouponById,
+  updateCoupon,
+  deleteCoupon
+} from '../controllers/coupon.controller';
 import { authenticate } from '../middleware/authenticate';
 import { authorize } from '../middleware/authorize';
 
@@ -26,5 +33,12 @@ router.delete('/students/:id', deleteStudent);
 router.delete('/students/:id/sessions/:sessionId', revokeStudentSession);
 router.get('/enrollments', getAllEnrollments);
 router.get('/courses', getAllCourses);
+
+// Coupon management routes
+router.post('/coupons', createCoupon);
+router.get('/coupons', getCoupons);
+router.get('/coupons/:id', getCouponById);
+router.put('/coupons/:id', updateCoupon);
+router.delete('/coupons/:id', deleteCoupon);
 
 export default router;
