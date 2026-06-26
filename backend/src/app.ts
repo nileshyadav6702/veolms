@@ -2,7 +2,9 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import swaggerUi from 'swagger-ui-express';
 import { config } from './config/env';
+import { swaggerSpec } from './config/swagger';
 import authRoutes from './routes/auth.routes';
 import courseRoutes from './routes/course.routes';
 import lessonRoutes from './routes/lesson.routes';
@@ -57,6 +59,30 @@ const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
 app.use(globalLimiter);
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
+
+// ─── Swagger API Docs (dev only) ────────────────────────────────────────────
+if (config.NODE_ENV !== 'production') {
+  const swaggerUiOptions: swaggerUi.SwaggerUiOptions = {
+    customSiteTitle: 'VeoLMS API Docs',
+    customCss: `
+      .swagger-ui .topbar { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+      .swagger-ui .topbar .download-url-wrapper { display: none; }
+      .swagger-ui .info h2.title { color: #6366f1; }
+    `,
+    swaggerOptions: {
+      persistAuthorization: true,
+      displayRequestDuration: true,
+      docExpansion: 'none',
+      filter: true,
+      tryItOutEnabled: true,
+    },
+  };
+  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOptions));
+  app.get('/api/docs.json', (_req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(swaggerSpec);
+  });
+}
 
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/courses', courseRoutes);
