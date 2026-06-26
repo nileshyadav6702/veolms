@@ -32,42 +32,42 @@ export default function ConfirmModal({
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <Card className="w-full max-w-md bg-white border border-hairline shadow-2xl overflow-hidden rounded-2xl relative z-10" padding="none">
+      <Card className="w-full max-w-md bg-[var(--ds-card-bg)] border border-[var(--ds-hairline)] shadow-2xl overflow-hidden rounded-2xl relative z-10" padding="none">
         <div className="p-6 space-y-5">
           {/* Header */}
           <div className="flex items-start gap-4">
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
               isDestructive 
-                ? 'bg-red-50 text-red-600 border-red-100' 
-                : 'bg-amber-50 text-amber-600 border-amber-100'
+                ? 'bg-[var(--ds-error-soft)] text-red-500 border-red-500/20' 
+                : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
             }`}>
               <AlertTriangle className="w-5 h-5" />
             </div>
             <div className="space-y-1">
-              <h3 className="font-bold text-gray-900 text-sm sm:text-base leading-tight">
+              <h3 className="font-bold text-[var(--ds-ink)] text-sm sm:text-base leading-tight">
                 {title}
               </h3>
-              <p className="text-gray-500 text-xs leading-relaxed">
+              <p className="text-[var(--ds-body)] text-xs leading-relaxed">
                 {message}
               </p>
             </div>
             <button
               onClick={onClose}
               disabled={loading}
-              className="ml-auto text-zinc-400 hover:text-zinc-600 transition-colors p-1 rounded-lg hover:bg-canvas-soft-2 shrink-0 cursor-pointer"
+              className="ml-auto text-[var(--ds-mute)] hover:text-[var(--ds-ink)] transition-colors p-1 rounded-lg hover:bg-[var(--ds-canvas-soft-2)] shrink-0 cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
           {/* Action Row */}
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-hairline">
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-[var(--ds-hairline)]">
             <Button
               variant="outline"
               size="sm"
               onClick={onClose}
               disabled={loading}
-              className="bg-white text-xs px-4"
+              className="bg-[var(--ds-canvas)] text-xs px-4"
             >
               {cancelText}
             </Button>

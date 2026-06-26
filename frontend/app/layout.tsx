@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/lib/auth-context'
 import { ToastProvider } from '@/lib/toast-context'
+import { ThemeProvider } from '@/lib/theme-context'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -33,6 +34,25 @@ export const metadata: Metadata = {
   },
 }
 
+/**
+ * Anti-flash inline script: reads localStorage before React hydrates,
+ * applies .dark class and data-theme attr to <html> immediately.
+ */
+const themeScript = `
+(function() {
+  try {
+    var stored = localStorage.getItem('veolms-theme');
+    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var theme = stored === 'dark' || stored === 'light' ? stored : (prefersDark ? 'dark' : 'light');
+    var root = document.documentElement;
+    root.setAttribute('data-theme', theme);
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    }
+  } catch (e) {}
+})();
+`.trim()
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -42,11 +62,18 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">
-        <AuthProvider>
-          <ToastProvider>{children}</ToastProvider>
-        </AuthProvider>
+      {/* Anti-FOUC script — runs synchronously before paint */}
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
+      <body className="min-h-full flex flex-col bg-[var(--ds-canvas-soft)] text-[var(--ds-ink)]">
+        <ThemeProvider>
+          <AuthProvider>
+            <ToastProvider>{children}</ToastProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

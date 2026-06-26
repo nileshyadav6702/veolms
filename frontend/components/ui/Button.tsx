@@ -22,15 +22,19 @@ export default function Button({
   ...props
 }: ButtonProps) {
   const base =
-    'inline-flex items-center justify-center font-medium transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2'
+    'inline-flex items-center justify-center font-medium transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[var(--ds-primary)]/20 focus:ring-offset-2 focus:ring-offset-[var(--ds-canvas)]'
 
   const radius = pill ? 'rounded-full' : 'rounded-lg'
 
   const variants = {
-    primary: 'bg-primary text-white border border-primary hover:bg-zinc-800 transition-colors shadow-sm',
-    secondary: 'bg-white text-ink border border-hairline hover:bg-canvas-soft-2 transition-colors shadow-sm',
-    outline: 'border border-primary text-primary hover:bg-canvas-soft-2 transition-colors',
-    ghost: 'text-body hover:text-ink hover:bg-canvas-soft-2 transition-colors',
+    primary:
+      'bg-[var(--ds-primary)] text-[var(--ds-on-primary)] border border-[var(--ds-primary)] hover:opacity-90 transition-opacity shadow-sm',
+    secondary:
+      'bg-[var(--ds-canvas)] text-[var(--ds-ink)] border border-[var(--ds-hairline)] hover:bg-[var(--ds-canvas-soft-2)] transition-colors shadow-sm',
+    outline:
+      'border border-[var(--ds-primary)] text-[var(--ds-ink)] hover:bg-[var(--ds-canvas-soft-2)] transition-colors',
+    ghost:
+      'text-[var(--ds-body)] hover:text-[var(--ds-ink)] hover:bg-[var(--ds-canvas-soft-2)] transition-colors',
     danger: 'bg-red-600 text-white hover:bg-red-700 transition-colors shadow-sm',
   }
 

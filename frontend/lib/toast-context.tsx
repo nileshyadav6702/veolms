@@ -50,10 +50,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   }
 
   const borderColors = {
-    success: 'border-emerald-100 bg-white/95 text-emerald-800 shadow-emerald-100/30',
-    error: 'border-red-100 bg-white/95 text-red-800 shadow-red-100/30',
-    warning: 'border-amber-100 bg-white/95 text-amber-800 shadow-amber-100/30',
-    info: 'border-blue-100 bg-white/95 text-blue-800 shadow-blue-100/30',
+    success: 'border-emerald-500/20 bg-[var(--ds-canvas)]/95 text-emerald-500 shadow-emerald-500/10',
+    error: 'border-red-500/20 bg-[var(--ds-canvas)]/95 text-red-500 shadow-red-500/10',
+    warning: 'border-amber-500/20 bg-[var(--ds-canvas)]/95 text-amber-500 shadow-amber-500/10',
+    info: 'border-blue-500/20 bg-[var(--ds-canvas)]/95 text-blue-500 shadow-blue-500/10',
   }
 
   return (
@@ -67,12 +67,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             className={`flex items-start gap-3 p-4 rounded-xl border shadow-lg pointer-events-auto backdrop-blur-md transition-all duration-300 animate-slide-in-right ${borderColors[t.type]}`}
           >
             {icons[t.type]}
-            <div className="flex-1 text-xs font-bold leading-normal text-zinc-800">
+            <div className="flex-1 text-xs font-bold leading-normal text-[var(--ds-ink)]">
               {t.message}
             </div>
             <button
               onClick={() => removeToast(t.id)}
-              className="text-zinc-400 hover:text-zinc-600 transition-colors p-0.5 rounded cursor-pointer shrink-0"
+              className="text-[var(--ds-mute)] hover:text-[var(--ds-ink)] transition-colors p-0.5 rounded cursor-pointer shrink-0"
             >
               <X className="w-3.5 h-3.5" />
             </button>

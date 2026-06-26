@@ -23,7 +23,7 @@ export default function Card({
   return (
     <div
       className={[
-        'bg-white rounded-xl',
+        'bg-[var(--ds-card-bg)] rounded-xl transition-colors duration-200',
         hover ? 'vercel-card-shadow-hover cursor-pointer transition-shadow duration-200' : 'vercel-card-shadow',
         paddings[padding],
         className,
