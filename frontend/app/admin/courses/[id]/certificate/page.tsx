@@ -18,6 +18,7 @@ import {
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Spinner from '@/components/ui/Spinner'
+import Badge from '@/components/ui/Badge'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { api } from '@/lib/api'
 import { useToast } from '@/lib/toast-context'
