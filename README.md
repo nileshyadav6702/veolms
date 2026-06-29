@@ -28,7 +28,7 @@ VeoLMS is a modern, high-performance, open-source **Learning Management System (
 | ☁️ **Cloudflare R2 Storage** | Zero-egress-cost object storage for videos, HLS segments, thumbnails, subtitles, and certificates |
 | ⚡ **Async Processing Pipeline** | Cloudflare Worker + background daemon architecture keeps API threads free during long FFmpeg / Whisper jobs |
 | 📖 **Swagger API Docs** | Interactive API documentation available at `/api/docs` in development |
-| 🛡️ **Security Hardened** | Helmet, CORS, rate limiting (global + per-route), JWT auth with HTTP-only cookies |
+| 🛡️ **Security Hardened** | Helmet, CORS, rate limiting, JWT + cookie refresh tokens, stateful session verification, dynamic student watermarking, tab-blur prevention, print-screen blocking |
 
 ---
 
@@ -230,6 +230,29 @@ node daemon.js
 | Variable | Description |
 |---|---|
 | `NEXT_PUBLIC_API_URL` | Backend base URL (e.g. `http://localhost:5000`) |
+
+---
+
+## 🛡️ Security Architecture & DRM Deterrents
+
+VeoLMS implements a robust, multi-layer security configuration to protect course resources and user sessions:
+
+### 1. Token Lifecycle & Session Management
+* **Dual-Token System**: Access tokens expire in **15 minutes** to limit exposure if stolen. Refresh tokens expire in **7 days** and are sent via secure, HTTP-only cross-origin cookies.
+* **Stateful Session Revocation**: Access and refresh tokens are cryptographically checked against the database (`Session` model) on each request. When a user logs out or terminates a session from another device, authorization is revoked immediately.
+* **MongoDB Session TTL**: Sessions in the database automatically expire 7 days after their `lastActive` timestamp via a MongoDB TTL index, preventing database bloat.
+* **Concurrent Device Limits**: Users are limited to **2 active concurrent sessions** to prevent account sharing.
+
+### 2. Video Streaming & Asset Protection
+* **Authenticated Backend Proxying**: The browser never gets direct access to video files (`.mp4`), HLS indexes (`.m3u8`), or HLS segments (`.ts`) on Cloudflare R2. Instead, all streams are securely requested using AWS SDK credentials by the server and piped to authorized clients. Public access on the R2 bucket can be completely disabled.
+* **Enrollment Checking**: The video stream proxy endpoints verify that the student is authenticated and enrolled in the requested course before serving any segments.
+
+### 3. Client-Side Screen Recording Deterrents
+* **Dynamic Student Email Watermark**: A semi-transparent floating text block displaying the student's email and ID bounces randomly inside the media player container every 7 seconds. 
+* **Static Anti-Crop Watermark**: A secondary stationary watermark is kept at the bottom-right of the player to deter video cropping attempts.
+* **Tab-Focus Interception**: The video player monitors window focus. If the tab loses focus (e.g. user opens a screen-recording software window), the video automatically pauses and displays a blurred blackout shield.
+* **Print/Screenshot Blocking**: Custom print media CSS rules hide the video player if a print-screen or browser printing command is issued.
+* **Context Menu Lock**: Right-click is blocked inside the video player wrapper to prevent inspect-element link grabbing.
 
 ---
 
