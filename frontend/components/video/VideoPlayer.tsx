@@ -41,6 +41,37 @@ export default function VideoPlayer({
   const initialTimeSetRef = useRef(false)
   const [watermarkPos, setWatermarkPos] = useState({ top: '15%', left: '15%' })
   const [isTabFocused, setIsTabFocused] = useState(true)
+  const [isBlackout, setIsBlackout] = useState(false)
+
+  // Capture screenshot shortcuts to trigger instant blackout
+  useEffect(() => {
+    let timeoutId: any;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isPrintScreen = e.key === 'PrintScreen'
+      const isCtrlShiftS = e.ctrlKey && e.shiftKey && (e.key === 's' || e.key === 'S')
+      const isMetaShiftS = e.metaKey && e.shiftKey && (e.key === 's' || e.key === 'S')
+
+      if (isPrintScreen || isCtrlShiftS || isMetaShiftS) {
+        e.preventDefault()
+        setIsBlackout(true)
+        if (playerRef.current && !playerRef.current.paused) {
+          playerRef.current.pause()
+        }
+
+        if (timeoutId) clearTimeout(timeoutId)
+        timeoutId = setTimeout(() => {
+          setIsBlackout(false)
+        }, 3000) // Keep screen black for 3 seconds to disrupt screenshotting
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      if (timeoutId) clearTimeout(timeoutId)
+    }
+  }, [])
 
   // Reset tracking ref when source changes
   useEffect(() => {
@@ -170,6 +201,14 @@ export default function VideoPlayer({
         >
           {watermarkText}
         </div>
+
+        {/* Screenshot Blackout Security Overlay */}
+        {isBlackout && (
+          <div className="absolute inset-0 bg-black z-[50] flex flex-col items-center justify-center text-center p-4">
+            <p className="text-red-500 text-sm md:text-base font-semibold">Screenshot / Recording Attempted</p>
+            <p className="text-zinc-500 text-xs mt-1">Screen capturing is strictly prohibited. Your session is monitored.</p>
+          </div>
+        )}
 
         {/* Tab blur security overlay */}
         {!isTabFocused && (

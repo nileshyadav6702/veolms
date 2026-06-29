@@ -252,6 +252,7 @@ VeoLMS implements a robust, multi-layer security configuration to protect course
 * **Static Anti-Crop Watermark**: A secondary stationary watermark is kept at the bottom-right of the player to deter video cropping attempts.
 * **Tab-Focus Interception**: The video player monitors window focus. If the tab loses focus (e.g. user opens a screen-recording software window), the video automatically pauses and displays a blurred blackout shield.
 * **Print/Screenshot Blocking**: Custom print media CSS rules hide the video player if a print-screen or browser printing command is issued.
+* **Active Screenshot Key Interception**: Global keyboard listeners intercept `PrintScreen`, `Ctrl + Shift + S`, and `Meta + Shift + S` keys to immediately display a solid black overlay for 3 seconds, ruining any captured file while pausing playback.
 * **Context Menu Lock**: Right-click is blocked inside the video player wrapper to prevent inspect-element link grabbing.
 
 ---
