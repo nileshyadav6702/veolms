@@ -130,7 +130,6 @@ export default function AdminStudentsPage() {
                 </div>
                 <div>
                   <span className="font-semibold text-zinc-950 block">{student.name}</span>
-                  <span className="font-mono text-[9px] text-zinc-400 font-medium">{student._id}</span>
                 </div>
               </div>
             </td>
