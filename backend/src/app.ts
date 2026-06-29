@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import swaggerUi from 'swagger-ui-express';
+import cookieParser from 'cookie-parser';
 import { config } from './config/env';
 import { swaggerSpec } from './config/swagger';
 import authRoutes from './routes/auth.routes';
@@ -51,6 +52,7 @@ app.use(
 // Capture raw body for Razorpay webhook signature verification
 app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
 
+app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
 
 const globalLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 500 });

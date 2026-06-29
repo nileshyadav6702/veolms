@@ -20,6 +20,7 @@ const sessionSchema = new Schema<ISession>(
 );
 
 sessionSchema.index({ userId: 1 });
-sessionSchema.index({ lastActive: -1 });
+sessionSchema.index({ lastActive: 1 }, { expireAfterSeconds: 7 * 24 * 60 * 60 }); // TTL index: auto-delete session after 7 days of inactivity
+
 
 export const Session = mongoose.model<ISession>('Session', sessionSchema);

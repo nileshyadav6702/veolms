@@ -126,7 +126,7 @@ veolms/
 - **Node.js** v18+
 - **npm** v9+
 - **MongoDB** (local or Atlas connection string)
-- **Cloudflare R2** bucket with public access or custom domain
+- **Cloudflare R2** bucket (recommended to disable public access/read on the bucket since video streams and subtitles are securely proxied and authenticated via the backend; only a public URL is used for public assets like thumbnails)
 - **Razorpay** account (Key ID + Secret + webhook)
 - **Google Gemini API key** (for AI chat)
 - **Python 3.10+** + `faster-whisper` (for local daemon)

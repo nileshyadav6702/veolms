@@ -3,7 +3,8 @@ import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { User } from '../models/User';
 import { Session } from '../models/Session';
-import { signToken } from '../services/jwt.service';
+import { signToken, signRefreshToken, verifyRefreshToken } from '../services/jwt.service';
+import { config } from '../config/env';
 
 const signupSchema = z.object({
   name: z.string().min(2).max(100),
@@ -43,6 +44,18 @@ export async function signup(req: Request, res: Response): Promise<void> {
       email: user.email, 
       role: user.role,
       sessionId: session._id.toString() 
+    });
+
+    const refreshToken = signRefreshToken({
+      id: user._id.toString(),
+      sessionId: session._id.toString()
+    });
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: config.NODE_ENV === 'production',
+      sameSite: config.NODE_ENV === 'production' ? 'none' : 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
 
     res.status(201).json({
@@ -116,6 +129,18 @@ export async function login(req: Request, res: Response): Promise<void> {
       sessionId: session._id.toString() 
     });
 
+    const refreshToken = signRefreshToken({
+      id: user._id.toString(),
+      sessionId: session._id.toString()
+    });
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: config.NODE_ENV === 'production',
+      sameSite: config.NODE_ENV === 'production' ? 'none' : 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
     res.json({
       success: true,
       token,
@@ -136,6 +161,11 @@ export async function logout(req: Request, res: Response): Promise<void> {
     if (req.user?.sessionId) {
       await Session.findByIdAndDelete(req.user.sessionId);
     }
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: config.NODE_ENV === 'production',
+      sameSite: config.NODE_ENV === 'production' ? 'none' : 'lax',
+    });
     res.json({ success: true, message: 'Logged out successfully' });
   } catch {
     res.status(500).json({ success: false, message: 'Server error during logout' });
@@ -242,5 +272,66 @@ export async function revokeSession(req: Request, res: Response): Promise<void> 
   } catch (err) {
     console.error('[Revoke Session Error]:', err);
     res.status(500).json({ success: false, message: 'Server error revoking session' });
+  }
+}
+
+export async function refresh(req: Request, res: Response): Promise<void> {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) {
+      res.status(401).json({ success: false, message: 'No refresh token provided' });
+      return;
+    }
+
+    let payload;
+    try {
+      payload = verifyRefreshToken(refreshToken);
+    } catch (err) {
+      res.status(401).json({ success: false, message: 'Invalid or expired refresh token' });
+      return;
+    }
+
+    // Stateful check: verify session exists in DB
+    const session = await Session.findById(payload.sessionId);
+    if (!session) {
+      res.status(401).json({ success: false, message: 'Session expired or revoked' });
+      return;
+    }
+
+    const user = await User.findById(payload.id);
+    if (!user) {
+      res.status(401).json({ success: false, message: 'User not found' });
+      return;
+    }
+
+    // Generate a new short-lived access token
+    const accessToken = signToken({
+      id: user._id.toString(),
+      email: user.email,
+      role: user.role,
+      sessionId: session._id.toString(),
+    });
+
+    // Rotate the refresh token
+    const newRefreshToken = signRefreshToken({
+      id: user._id.toString(),
+      sessionId: session._id.toString(),
+    });
+
+    res.cookie('refreshToken', newRefreshToken, {
+      httpOnly: true,
+      secure: config.NODE_ENV === 'production',
+      sameSite: config.NODE_ENV === 'production' ? 'none' : 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
+    res.json({
+      success: true,
+      token: accessToken,
+      user: { id: user._id, name: user.name, email: user.email, role: user.role },
+    });
+  } catch (err) {
+    console.error('[Refresh Token Error]:', err);
+    res.status(500).json({ success: false, message: 'Server error during token refresh' });
   }
 }
