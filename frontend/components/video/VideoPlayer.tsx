@@ -151,10 +151,20 @@ export default function VideoPlayer({
 
         {/* Dynamic Security Watermark to prevent screen recording sharing */}
         <div 
-          className="absolute pointer-events-none select-none text-[10px] md:text-xs font-mono text-white/20 z-40 transition-all duration-1000 ease-in-out"
+          className="absolute pointer-events-none select-none text-[10px] md:text-xs font-mono text-white/35 z-40 transition-all duration-1000 ease-in-out"
           style={{
             top: watermarkPos.top,
             left: watermarkPos.left,
+            textShadow: '1px 1px 2px rgba(0,0,0,0.8)'
+          }}
+        >
+          {watermarkText}
+        </div>
+
+        {/* Static Secondary Watermark in bottom-right corner to prevent cropping */}
+        <div 
+          className="absolute bottom-4 right-4 pointer-events-none select-none text-[9px] md:text-[11px] font-mono text-white/25 z-40"
+          style={{
             textShadow: '1px 1px 2px rgba(0,0,0,0.8)'
           }}
         >
