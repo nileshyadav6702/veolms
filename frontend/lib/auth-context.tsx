@@ -57,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   function logout() {
     if (localStorage.getItem('veolms_token')) {
-      api.post('/api/auth/logout').catch((err) => {
+      api.post('/api/auth/logout', {}).catch((err) => {
         console.error('Failed to logout on server:', err)
       })
     }
