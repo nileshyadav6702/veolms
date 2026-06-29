@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { ChevronLeft, ChevronRight, Search, SlidersHorizontal, UserCheck } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Search, UserCheck } from 'lucide-react'
 import DataTable from '@/components/admin/DataTable'
 import Button from '@/components/ui/Button'
 import Spinner from '@/components/ui/Spinner'
@@ -92,12 +92,7 @@ export default function AdminStudentsPage() {
             className="w-full pl-10 pr-4 py-2 border border-zinc-200 rounded-xl text-xs bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 font-medium transition-all"
           />
         </div>
-        <div className="flex items-center gap-2 self-stretch sm:self-auto justify-end">
-          <Button variant="outline" className="flex items-center gap-1.5 text-xs text-zinc-500 px-3 py-2 shrink-0">
-            <SlidersHorizontal className="w-3.5 h-3.5" />
-            Filters
-          </Button>
-        </div>
+
       </div>
 
       {/* Table */}

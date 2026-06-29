@@ -324,14 +324,52 @@ export async function getAllEnrollments(req: Request, res: Response): Promise<vo
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
     const skip = (page - 1) * limit;
+
+    const query: any = { paymentStatus: 'paid' };
+
+    if (req.query.courseId) {
+      query.courseId = req.query.courseId;
+    }
+
+    if (req.query.startDate || req.query.endDate) {
+      query.enrolledAt = {};
+      if (req.query.startDate) {
+        const start = new Date(req.query.startDate as string);
+        if (!isNaN(start.getTime())) {
+          query.enrolledAt.$gte = start;
+        }
+      }
+      if (req.query.endDate) {
+        const end = new Date(req.query.endDate as string);
+        if (!isNaN(end.getTime())) {
+          query.enrolledAt.$lte = end;
+        }
+      }
+      if (Object.keys(query.enrolledAt).length === 0) {
+        delete query.enrolledAt;
+      }
+    }
+
+    if (req.query.search) {
+      const searchRegex = new RegExp(req.query.search as string, 'i');
+      const users = await User.find({
+        $or: [
+          { name: searchRegex },
+          { email: searchRegex }
+        ]
+      }).select('_id');
+      const userIds = users.map(u => u._id);
+      query.userId = { $in: userIds };
+    }
+
     const [enrollments, total] = await Promise.all([
-      Enrollment.find({ paymentStatus: 'paid' })
+      Enrollment.find(query)
         .populate('userId', 'name email')
         .populate('courseId', 'title price')
         .skip(skip)
         .limit(limit)
         .sort({ enrolledAt: -1 }),
-      Enrollment.countDocuments({ paymentStatus: 'paid' }),
+      Enrollment.countDocuments(query),
     ]);
     res.json({ success: true, enrollments, total, page, totalPages: Math.ceil(total / limit) });
   } catch {
