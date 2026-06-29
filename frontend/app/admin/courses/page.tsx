@@ -461,15 +461,17 @@ export default function AdminCoursesPage() {
               </button>
             </div>
 
+            {/* Sticky Upload Progress Bar outside scrollable content */}
+            {isUploading && (
+              <div className="px-6 py-4 bg-indigo-50 border-b border-indigo-100 text-center space-y-2 animate-pulse shrink-0">
+                <Spinner className="w-5 h-5 text-indigo-600 mx-auto animate-spin" />
+                <p className="text-xs font-semibold text-indigo-700">{uploadProgress}</p>
+                <p className="text-[10px] text-indigo-500 font-mono">Please keep this browser window open.</p>
+              </div>
+            )}
+
             {/* Form Fields Content */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              {isUploading && (
-                <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-xl text-center space-y-2 mb-4 animate-pulse">
-                  <Spinner className="w-5 h-5 text-indigo-600 mx-auto animate-spin" />
-                  <p className="text-xs font-semibold text-indigo-700">{uploadProgress}</p>
-                  <p className="text-[10px] text-indigo-500 font-mono">Please keep this browser window open.</p>
-                </div>
-              )}
 
               <form id="create-course-form" onSubmit={handleCreateCourse} className="space-y-4">
                 <Input
