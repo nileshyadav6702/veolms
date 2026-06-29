@@ -57,7 +57,7 @@ export async function getRecentProgress(req: Request, res: Response): Promise<vo
   try {
     const recent = await Progress.find({ userId: req.user!.id })
       .sort({ lastWatchedAt: -1 })
-      .limit(5)
+      .limit(3)
       .populate('lessonId', 'title duration courseId')
       .populate('courseId', 'title slug thumbnail');
     

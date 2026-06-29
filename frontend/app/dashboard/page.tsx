@@ -215,9 +215,6 @@ export default function StudentDashboardPage() {
         </Card>
       </div>
 
-      {/* Learning Streak Heatmap */}
-      <LearningStreakChart />
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         {/* Enrolled Courses list */}
         <div className="lg:col-span-2 space-y-4">
@@ -242,7 +239,7 @@ export default function StudentDashboardPage() {
             </div>
           ) : enrollments.length > 0 ? (
             <div className="grid grid-cols-1 gap-5">
-              {enrollments.map((enroll, idx) => {
+              {enrollments.slice(0, 2).map((enroll, idx) => {
                 const course = enroll.courseId
                 const percent = enroll.progressPercent ?? 0
                 const completed = enroll.completedCount ?? 0
@@ -311,6 +308,29 @@ export default function StudentDashboardPage() {
                   </Card>
                 )
               })}
+
+              {enrollments.length > 2 && (
+                <Card padding="none" className="p-4 bg-zinc-50/50 border border-hairline border-dashed rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center border border-indigo-100/50 shrink-0">
+                      <BookOpen className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-extrabold text-zinc-900 text-xs sm:text-sm">
+                        +{enrollments.length - 2} More Active Course{enrollments.length - 2 > 1 ? 's' : ''}
+                      </h4>
+                      <p className="text-[10px] sm:text-xs text-zinc-400 font-medium">
+                        Redirect to the catalog to view all your courses and continue learning.
+                      </p>
+                    </div>
+                  </div>
+                  <Link href="/dashboard/courses" className="w-full sm:w-auto shrink-0">
+                    <Button variant="outline" size="sm" className="w-full sm:w-auto text-indigo-600 hover:bg-indigo-50 border-indigo-100 bg-white font-bold text-xs gap-1.5 py-1.5 h-9 px-4">
+                      Explore Catalog <ArrowRight className="w-3.5 h-3.5" />
+                    </Button>
+                  </Link>
+                </Card>
+              )}
             </div>
           ) : (
             <div className="text-center py-16 bg-white border border-hairline rounded-xl p-8 shadow-sm max-w-md mx-auto">
@@ -341,7 +361,7 @@ export default function StudentDashboardPage() {
             </div>
           ) : recentProgress.length > 0 ? (
             <div className="space-y-3">
-              {recentProgress.map((item) => {
+              {recentProgress.slice(0, 3).map((item) => {
                 const isCompleted = item.completed
                 const percent = Math.round((item.watchedSeconds / (item.duration || 1)) * 100)
 
@@ -404,6 +424,9 @@ export default function StudentDashboardPage() {
           )}
         </div>
       </div>
+
+      {/* Learning Streak Heatmap */}
+      <LearningStreakChart />
     </div>
   )
 }
