@@ -9,6 +9,7 @@ import CourseGrid from '@/components/courses/CourseGrid'
 import Button from '@/components/ui/Button'
 import { api } from '@/lib/api'
 import { Course } from '@/components/courses/CourseCard'
+import { useAuth } from '@/lib/auth-context'
 
 function CourseListContent() {
   const router = useRouter()
@@ -21,6 +22,24 @@ function CourseListContent() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
+  
+  const { user } = useAuth()
+  const [purchasedIds, setPurchasedIds] = useState<string[]>([])
+
+  useEffect(() => {
+    if (user) {
+      api.get('/api/enrollments')
+        .then((data: any) => {
+          if (data && data.enrollments) {
+            const ids = data.enrollments
+              .filter((e: any) => e.courseId)
+              .map((e: any) => e.courseId._id)
+            setPurchasedIds(ids)
+          }
+        })
+        .catch(() => {})
+    }
+  }, [user])
 
   const fetchCourses = useCallback((term: string, pageNum: number) => {
     setLoading(true)
@@ -108,7 +127,12 @@ function CourseListContent() {
       {loading ? (
         <CourseGrid courses={[]} loading={true} cols={3} />
       ) : courses.length > 0 ? (
-        <CourseGrid courses={courses} loading={false} cols={3} />
+        <CourseGrid
+          courses={courses}
+          loading={false}
+          cols={3}
+          purchasedCourseIds={purchasedIds}
+        />
       ) : (
         <div className="text-center py-20 bg-white border border-gray-100 rounded-2xl p-8 shadow-sm">
           <div className="w-12 h-12 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-600">

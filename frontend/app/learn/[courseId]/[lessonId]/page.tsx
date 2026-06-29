@@ -168,8 +168,8 @@ export default function LearnPage() {
   const chatEndRef = useRef<HTMLDivElement>(null)
 
   // AI settings
-  const [aiProvider, setAiProvider] = useState<'gemini' | 'openai'>('gemini')
-  const [aiModel, setAiModel] = useState('gemini-1.5-flash')
+  const [aiProvider, setAiProvider] = useState<'gemini' | 'openai'>('openai')
+  const [aiModel, setAiModel] = useState('gpt-4o-mini')
   const [aiApiKey, setAiApiKey] = useState('')
   const [aiHasKey, setAiHasKey] = useState(false)
   const [showAiSettings, setShowAiSettings] = useState(false)
@@ -177,7 +177,7 @@ export default function LearnPage() {
   const [savingAiSettings, setSavingAiSettings] = useState(false)
 
   // Resizable sidebar settings
-  const [sidebarWidth, setSidebarWidth] = useState(320)
+  const [sidebarWidth, setSidebarWidth] = useState(330)
   const isResizingRef = useRef(false)
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
@@ -1103,13 +1103,8 @@ export default function LearnPage() {
                 <div className="flex-1 overflow-y-auto p-4 space-y-4 flex flex-col min-h-0 no-scrollbar bg-canvas-soft">
                   {chatMessages.length === 0 ? (
                     <div className="flex-1 flex flex-col items-center justify-center text-center p-4 space-y-6">
-                      {/* Bouncing concentric rings for empty state logo */}
-                      <div className="relative w-16 h-16 flex items-center justify-center">
-                        <div className="absolute inset-0 rounded-full bg-indigo-500/5 border border-indigo-500/10 animate-ping duration-1000" />
-                        <div className="absolute inset-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 animate-pulse" />
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-violet-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/25 z-10">
-                          <Sparkles className="w-5 h-5 animate-pulse" />
-                        </div>
+                      <div className="w-12 h-12 rounded-full bg-zinc-950 text-white flex items-center justify-center text-sm font-extrabold shadow-md">
+                        AI
                       </div>
                       <div className="max-w-[200px]">
                         <h4 className="font-bold text-xs text-ink leading-tight">Lesson AI Assistant</h4>
@@ -1164,8 +1159,8 @@ export default function LearnPage() {
                             }`}
                           >
                             {isAi && (
-                              <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-indigo-500 to-violet-500 text-white flex items-center justify-center shrink-0 shadow-sm border border-indigo-200/50">
-                                <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+                              <div className="w-7 h-7 rounded-full bg-zinc-950 text-white flex items-center justify-center shrink-0 text-[10px] font-extrabold shadow-xs">
+                                AI
                               </div>
                             )}
                             
@@ -1195,8 +1190,8 @@ export default function LearnPage() {
                       
                       {chatLoading && (
                         <div className="flex gap-2.5 items-start justify-start self-start max-w-[85%]">
-                          <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-indigo-500 to-violet-500 text-white flex items-center justify-center shrink-0 shadow-sm border border-indigo-200/50">
-                            <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+                          <div className="w-7 h-7 rounded-full bg-zinc-950 text-white flex items-center justify-center shrink-0 text-[10px] font-extrabold shadow-xs animate-pulse">
+                            AI
                           </div>
                           <div className="flex flex-col space-y-1">
                             <span className="text-[8px] font-mono text-mute uppercase px-1">Thinking</span>

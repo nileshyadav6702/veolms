@@ -19,6 +19,20 @@ function CourseListContent() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
+  const [purchasedIds, setPurchasedIds] = useState<string[]>([])
+
+  useEffect(() => {
+    api.get('/api/enrollments')
+      .then((data: any) => {
+        if (data && data.enrollments) {
+          const ids = data.enrollments
+            .filter((e: any) => e.courseId)
+            .map((e: any) => e.courseId._id)
+          setPurchasedIds(ids)
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   const fetchCourses = useCallback((term: string, pageNum: number) => {
     setLoading(true)
@@ -69,7 +83,7 @@ function CourseListContent() {
           Explore Library
         </span>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight mt-1">Available Courses</h1>
-        <p className="text-gray-500 text-xs mt-1">
+        <p className="text-gray-505 text-xs mt-1">
           Learn from experts, build real-world applications, and boost your tech career.
         </p>
       </div>
@@ -92,7 +106,7 @@ function CourseListContent() {
           </Button>
         </form>
 
-        <div className="text-xs sm:text-sm text-gray-500 font-medium">
+        <div className="text-xs sm:text-sm text-gray-505 font-medium">
           {!loading && (
             <span>
               Showing {courses.length} of {total} {total === 1 ? 'course' : 'courses'}
@@ -105,7 +119,13 @@ function CourseListContent() {
       {loading ? (
         <CourseGrid courses={[]} loading={true} cols={3} hrefPrefix="/dashboard/courses" />
       ) : courses.length > 0 ? (
-        <CourseGrid courses={courses} loading={false} cols={3} hrefPrefix="/dashboard/courses" />
+        <CourseGrid
+          courses={courses}
+          loading={false}
+          cols={3}
+          hrefPrefix="/dashboard/courses"
+          purchasedCourseIds={purchasedIds}
+        />
       ) : (
         <div className="text-center py-20 bg-white border border-hairline rounded-2xl p-8 shadow-sm">
           <div className="w-12 h-12 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-600">

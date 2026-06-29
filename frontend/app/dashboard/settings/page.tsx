@@ -31,8 +31,8 @@ export default function AccountSettingsPage() {
   const [sessionsLoading, setSessionsLoading] = useState(true)
   
   // AI Settings State
-  const [aiProvider, setAiProvider] = useState<'gemini' | 'openai'>('gemini')
-  const [aiModel, setAiModel] = useState('gemini-1.5-flash')
+  const [aiProvider, setAiProvider] = useState<'gemini' | 'openai'>('openai')
+  const [aiModel, setAiModel] = useState('gpt-4o-mini')
   const [aiApiKey, setAiApiKey] = useState('')
   const [aiHasKey, setAiHasKey] = useState(false)
   const [showKeyText, setShowKeyText] = useState(false)

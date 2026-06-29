@@ -5,9 +5,16 @@ interface Props {
   loading?: boolean
   cols?: 3 | 4 | 5
   hrefPrefix?: string
+  purchasedCourseIds?: string[]
 }
 
-export default function CourseGrid({ courses, loading = false, cols = 3, hrefPrefix = '/courses' }: Props) {
+export default function CourseGrid({
+  courses,
+  loading = false,
+  cols = 3,
+  hrefPrefix = '/courses',
+  purchasedCourseIds = [],
+}: Props) {
   const colClass = {
     3: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
     4: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4',
@@ -34,7 +41,13 @@ export default function CourseGrid({ courses, loading = false, cols = 3, hrefPre
   return (
     <div className={`grid ${colClass} gap-5`}>
       {courses.map((course, i) => (
-        <CourseCard key={course._id} course={course} index={i} hrefPrefix={hrefPrefix} />
+        <CourseCard
+          key={course._id}
+          course={course}
+          index={i}
+          hrefPrefix={hrefPrefix}
+          isPurchased={purchasedCourseIds.includes(course._id)}
+        />
       ))}
     </div>
   )

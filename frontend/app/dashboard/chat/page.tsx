@@ -249,7 +249,6 @@ export default function AIChatDashboardPage() {
         {/* Sidebar Header with New Chat CTA */}
         <div className="p-4 border-b border-hairline flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-ink" />
             <h2 className="font-bold text-sm text-ink tracking-tight">AI Study Chats</h2>
           </div>
           <button
@@ -376,8 +375,8 @@ export default function AIChatDashboardPage() {
                 </div>
               ) : messages.length === 0 ? (
                 <div className="flex-1 flex flex-col items-center justify-center text-center p-4 space-y-6 mt-4">
-                  <div className="w-10 h-10 rounded-full bg-white border border-hairline shadow-sm flex items-center justify-center text-primary">
-                    <Sparkles className="w-4.5 h-4.5 text-ink animate-pulse" />
+                  <div className="w-10 h-10 rounded-full bg-zinc-950 text-white flex items-center justify-center text-xs font-extrabold shadow-sm">
+                    AI
                   </div>
                   <div className="max-w-[260px] space-y-1.5">
                     <h4 className="font-bold text-xs text-ink tracking-tight">Conversation initialized</h4>
@@ -424,8 +423,8 @@ export default function AIChatDashboardPage() {
                         }`}
                       >
                         {isAi && (
-                          <div className="w-7 h-7 rounded-full bg-white text-ink flex items-center justify-center shrink-0 border border-hairline vercel-card-shadow">
-                            <Sparkles className="w-3.5 h-3.5 text-ink" />
+                          <div className="w-7 h-7 rounded-full bg-zinc-950 text-white flex items-center justify-center shrink-0 text-[10px] font-extrabold shadow-xs">
+                            AI
                           </div>
                         )}
                         
@@ -455,8 +454,8 @@ export default function AIChatDashboardPage() {
                   
                   {sendLoading && (
                     <div className="flex gap-2.5 items-start justify-start self-start max-w-[80%]">
-                      <div className="w-7 h-7 rounded-full bg-white text-ink flex items-center justify-center shrink-0 border border-hairline vercel-card-shadow">
-                        <Sparkles className="w-3.5 h-3.5 text-ink animate-pulse" />
+                      <div className="w-7 h-7 rounded-full bg-zinc-950 text-white flex items-center justify-center shrink-0 text-[10px] font-extrabold shadow-xs animate-pulse">
+                        AI
                       </div>
                       <div className="flex flex-col space-y-1">
                         <span className="text-[9px] font-mono text-mute uppercase px-1">Thinking</span>
@@ -495,8 +494,8 @@ export default function AIChatDashboardPage() {
         ) : (
           /* Empty state of dashboard chat page with Vercel Mesh Gradient decoration */
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-5 vercel-mesh-gradient">
-            <div className="w-12 h-12 rounded-full bg-white border border-hairline shadow-sm flex items-center justify-center text-primary">
-              <Sparkles className="w-5 h-5 text-zinc-900 animate-pulse" />
+            <div className="w-12 h-12 rounded-full bg-zinc-950 text-white flex items-center justify-center text-sm font-extrabold shadow-md">
+              AI
             </div>
             <div className="max-w-sm space-y-2">
               <h3 className="text-sm font-bold text-ink tracking-tight">AI Learning Partner</h3>

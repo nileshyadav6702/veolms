@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Star, Clock, BookOpen } from 'lucide-react'
+import { Star, Clock, BookOpen, Lock } from 'lucide-react'
 
 export interface Course {
   _id: string
@@ -26,10 +26,12 @@ export default function CourseCard({
   course,
   index = 0,
   hrefPrefix = '/courses',
+  isPurchased = false,
 }: {
   course: Course
   index?: number
   hrefPrefix?: string
+  isPurchased?: boolean
 }) {
   const gradient = GRADIENTS[index % GRADIENTS.length]
   const rating = course.rating ?? 4.8
@@ -89,12 +91,23 @@ export default function CourseCard({
             <span className="text-xs text-zinc-500">{course.totalLessons} lessons</span>
           </div>
 
-          {/* Price */}
-          <div className="flex items-center gap-2 border-t border-hairline pt-3 mt-1">
-            <span className="text-sm font-bold text-primary">₹{course.price}</span>
-            <span className="text-xs text-zinc-400 line-through">
-              ₹{originalPrice}
-            </span>
+          {/* Price / Purchase status */}
+          <div className="flex items-center justify-between border-t border-hairline pt-3 mt-1">
+            {isPurchased ? (
+              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-md flex items-center gap-1 shadow-xs">
+                ✓ Purchased
+              </span>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-primary">₹{course.price}</span>
+                <span className="text-xs text-zinc-400 line-through">
+                  ₹{originalPrice}
+                </span>
+              </div>
+            )}
+            {!isPurchased && (
+              <Lock className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+            )}
           </div>
         </div>
       </div>
