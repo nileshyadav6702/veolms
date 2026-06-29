@@ -720,7 +720,8 @@ export default function CourseBuilderPage() {
                           sectionLessons.map((lesson) => (
                             <div
                               key={lesson._id}
-                              className="flex items-center justify-between p-4 hover:bg-zinc-50/40 transition-colors group text-xs text-zinc-700"
+                              onClick={() => openDrawer('lesson', lesson._id, lesson)}
+                              className="flex items-center justify-between p-4 hover:bg-zinc-50/40 transition-colors group text-xs text-zinc-700 cursor-pointer"
                             >
                               <div className="flex items-center gap-3 pr-4 min-w-0">
                                 <div className="w-6 h-6 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center shrink-0 border border-indigo-100/40">
