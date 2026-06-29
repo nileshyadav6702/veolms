@@ -308,7 +308,8 @@ export default function AdminCoursesPage() {
           return (
             <tr 
               key={course._id} 
-              className={`hover:bg-gray-50/50 transition-colors relative ${isDropdownActive ? 'z-30' : 'z-10'}`}
+              onClick={() => router.push(`/admin/courses/${course._id}`)}
+              className={`hover:bg-gray-50/50 transition-colors relative cursor-pointer ${isDropdownActive ? 'z-30' : 'z-10'}`}
             >
             {/* Thumbnail */}
             <td className="px-6 py-4">
@@ -367,10 +368,16 @@ export default function AdminCoursesPage() {
                   <>
                     <div 
                       className="fixed inset-0 z-30" 
-                      onClick={() => setActiveDropdownId(null)}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setActiveDropdownId(null)
+                      }}
                     />
                     
-                    <div className="absolute right-6 top-10 z-40 w-48 bg-white border border-hairline rounded-xl shadow-xl py-1 text-left animate-fade-in">
+                    <div 
+                      className="absolute right-6 top-10 z-40 w-48 bg-white border border-hairline rounded-xl shadow-xl py-1 text-left animate-fade-in"
+                      onClick={(e) => e.stopPropagation()}
+                    >
 
                       <button
                         onClick={() => {
