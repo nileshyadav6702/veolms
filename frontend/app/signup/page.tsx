@@ -146,57 +146,47 @@ function SignupForm() {
 
 export default function SignupPage() {
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Render free-tier cold-start warning banner */}
-      <div className="w-full bg-amber-50/95 border-b border-amber-200/50 px-4 py-2.5 text-xs text-amber-800 flex items-center justify-center gap-2.5 font-medium relative z-50 shadow-sm">
-        <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-        <span className="text-center">
-          💡 <strong>Notice:</strong> This platform is deployed on Render's free tier. The backend API may take up to <strong>50 seconds</strong> to respond initially while booting from standby.
-        </span>
+    <div className="min-h-screen flex">
+      {/* Left Column: Stark atmosphere panel (Desktop only) */}
+      <div className="hidden lg:flex lg:w-1/2 bg-zinc-950 vercel-mesh-gradient border-r border-zinc-800 text-white flex-col justify-between p-12 relative overflow-hidden select-none">
+        <div className="flex items-center gap-2.5 z-10">
+          <img src="/favicon.svg" alt="VeoLMS Logo" className="w-8 h-8 object-contain" />
+          <span className="font-bold tracking-tight text-sm">VeoLMS Cloud</span>
+        </div>
+
+        <div className="space-y-4 z-10 max-w-lg">
+          <span className="font-mono text-[10px] text-zinc-500 font-bold uppercase tracking-wider flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-indigo-400" /> Platform Services
+          </span>
+          <h1 className="text-4xl font-semibold tracking-[-1.5px] leading-tight text-zinc-100">
+            Learn anything.<br />Build everything.
+          </h1>
+          <p className="text-zinc-400 text-sm leading-relaxed">
+            The stark, high-fidelity developer learning experience. Build modular apps, stream presigned lesson video components, and manage transactions seamlessly.
+          </p>
+        </div>
+
+        {/* Small bottom footer credentials */}
+        <div className="z-10 flex items-center justify-between text-[10px] font-mono text-zinc-500 font-bold uppercase tracking-wider">
+          <span>VeoLMS Console v2.0</span>
+          <span>© 2026 VeoLMS</span>
+        </div>
       </div>
 
-      <div className="flex-1 flex">
-        {/* Left Column: Stark atmosphere panel (Desktop only) */}
-        <div className="hidden lg:flex lg:w-1/2 bg-zinc-950 vercel-mesh-gradient border-r border-zinc-800 text-white flex-col justify-between p-12 relative overflow-hidden select-none">
-          <div className="flex items-center gap-2.5 z-10">
-            <img src="/favicon.svg" alt="VeoLMS Logo" className="w-8 h-8 object-contain" />
-            <span className="font-bold tracking-tight text-sm">VeoLMS Cloud</span>
-          </div>
-
-          <div className="space-y-4 z-10 max-w-lg">
-            <span className="font-mono text-[10px] text-zinc-500 font-bold uppercase tracking-wider flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-indigo-400" /> Platform Services
-            </span>
-            <h1 className="text-4xl font-semibold tracking-[-1.5px] leading-tight text-zinc-100">
-              Learn anything.<br />Build everything.
-            </h1>
-            <p className="text-zinc-400 text-sm leading-relaxed">
-              The stark, high-fidelity developer learning experience. Build modular apps, stream presigned lesson video components, and manage transactions seamlessly.
-            </p>
-          </div>
-
-          {/* Small bottom footer credentials */}
-          <div className="z-10 flex items-center justify-between text-[10px] font-mono text-zinc-500 font-bold uppercase tracking-wider">
-            <span>VeoLMS Console v2.0</span>
-            <span>© 2026 VeoLMS</span>
-          </div>
-        </div>
-
-        {/* Right Column: Authentication Card Form */}
-        <div className="w-full lg:w-1/2 flex items-center justify-center p-6 bg-white overflow-y-auto">
-          <Suspense
-            fallback={
-              <div className="w-full max-w-md p-8 animate-pulse space-y-6">
-                <div className="h-6 bg-canvas-soft-2 rounded w-1/3 mx-auto" />
-                <div className="h-10 bg-canvas-soft-2 rounded w-full" />
-                <div className="h-10 bg-canvas-soft-2 rounded w-full" />
-                <div className="h-10 bg-canvas-soft-2 rounded w-full" />
-              </div>
-            }
-          >
-            <SignupForm />
-          </Suspense>
-        </div>
+      {/* Right Column: Authentication Card Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 bg-white overflow-y-auto">
+        <Suspense
+          fallback={
+            <div className="w-full max-w-md p-8 animate-pulse space-y-6">
+              <div className="h-6 bg-canvas-soft-2 rounded w-1/3 mx-auto" />
+              <div className="h-10 bg-canvas-soft-2 rounded w-full" />
+              <div className="h-10 bg-canvas-soft-2 rounded w-full" />
+              <div className="h-10 bg-canvas-soft-2 rounded w-full" />
+            </div>
+          }
+        >
+          <SignupForm />
+        </Suspense>
       </div>
     </div>
   )
