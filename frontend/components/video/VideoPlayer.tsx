@@ -148,27 +148,27 @@ export default function VideoPlayer({
           ))}
         </MediaProvider>
         <DefaultVideoLayout icons={defaultLayoutIcons} noAudioGain />
-      </MediaPlayer>
 
-      {/* Dynamic Security Watermark to prevent screen recording sharing */}
-      <div 
-        className="absolute pointer-events-none select-none text-[10px] md:text-xs font-mono text-white/20 z-40 transition-all duration-1000 ease-in-out"
-        style={{
-          top: watermarkPos.top,
-          left: watermarkPos.left,
-          textShadow: '1px 1px 2px rgba(0,0,0,0.8)'
-        }}
-      >
-        {watermarkText}
-      </div>
-
-      {/* Tab blur security overlay */}
-      {!isTabFocused && (
-        <div className="absolute inset-0 bg-black/90 backdrop-blur-md z-50 flex flex-col items-center justify-center text-center p-4">
-          <p className="text-zinc-200 text-sm md:text-base font-semibold">Playback Paused</p>
-          <p className="text-zinc-500 text-xs mt-1">Keep this browser tab focused for security verification.</p>
+        {/* Dynamic Security Watermark to prevent screen recording sharing */}
+        <div 
+          className="absolute pointer-events-none select-none text-[10px] md:text-xs font-mono text-white/20 z-40 transition-all duration-1000 ease-in-out"
+          style={{
+            top: watermarkPos.top,
+            left: watermarkPos.left,
+            textShadow: '1px 1px 2px rgba(0,0,0,0.8)'
+          }}
+        >
+          {watermarkText}
         </div>
-      )}
+
+        {/* Tab blur security overlay */}
+        {!isTabFocused && (
+          <div className="absolute inset-0 bg-black/90 backdrop-blur-md z-50 flex flex-col items-center justify-center text-center p-4">
+            <p className="text-zinc-200 text-sm md:text-base font-semibold">Playback Paused</p>
+            <p className="text-zinc-500 text-xs mt-1">Keep this browser tab focused for security verification.</p>
+          </div>
+        )}
+      </MediaPlayer>
     </div>
   )
 }
