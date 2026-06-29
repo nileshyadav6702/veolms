@@ -9,5 +9,8 @@ VPS_DAEMON_URL = "https://YOUR_HF_USERNAME-YOUR_SPACE_NAME.hf.space"
 DAEMON_SECRET = "your-very-secure-daemon-secret"
 # The backend API URL (for local development, use Ngrok/Tunnels so Hugging Face can send callbacks to your local machine)
 BACKEND_URL = "http://localhost:5000"
+# ⚠️  IMPORTANT: Do NOT commit real secrets here. For production, use:
+#    wrangler secret put WORKER_SECRET
+#    wrangler secret put DAEMON_SECRET
 # Must match the WORKER_SECRET in your backend .env
-WORKER_SECRET = "transcode worker secret"
+WORKER_SECRET = "86d76a0b4f48cb552f9de1977c1da4d85d28ff1ff74eb451141ff6ee5735d6d7"

@@ -171,9 +171,26 @@ export async function getLessonHlsFile(req: Request, res: Response): Promise<voi
       relativePath = segments.slice(1).join('/');
     }
 
+    // ── Security: Path Traversal Protection ──────────────────────────────────
+    // Normalize the path to resolve any '..' or '.' segments
+    const normalizedPath = path.posix.normalize(relativePath);
+    // Block any path that tries to escape via traversal
+    if (normalizedPath.startsWith('..') || normalizedPath.includes('/../')) {
+      res.status(400).json({ success: false, message: 'Invalid path' });
+      return;
+    }
+    // Use the normalized path from this point
+    relativePath = normalizedPath;
+
     // Resolve target R2 key dynamically
     const baseDir = path.dirname(lesson.hlsKey);
     const r2Key = path.posix.join(baseDir, relativePath);
+
+    // Final guard: ensure resolved key is strictly under the lesson's HLS directory
+    if (!r2Key.startsWith(baseDir + '/') && r2Key !== baseDir) {
+      res.status(403).json({ success: false, message: 'Access denied: path outside lesson directory' });
+      return;
+    }
 
     const { stream, contentType, contentLength } = await getObjectStream(r2Key);
 

@@ -5,8 +5,8 @@ import { authorize } from '../middleware/authorize';
 
 const router = Router();
 
-router.get('/file', getFile);
-router.get('/image', getImage);
+router.get('/file', authenticate, getFile);          // Auth required: presigned URLs give direct R2 access
+router.get('/image', getImage);                       // Public: only serves thumbnail images (not video files)
 router.post('/thumbnail', authenticate, authorize('admin'), getThumbnailUploadUrl);
 router.post('/video', authenticate, authorize('admin'), getVideoUploadUrl);
 router.post('/delete-file', authenticate, authorize('admin'), deleteFile);
