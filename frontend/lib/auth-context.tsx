@@ -7,6 +7,7 @@ import {
   useState,
   ReactNode,
 } from 'react'
+import { api } from './api'
 
 export interface User {
   id: string
@@ -55,6 +56,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   function logout() {
+    if (localStorage.getItem('veolms_token')) {
+      api.post('/api/auth/logout').catch((err) => {
+        console.error('Failed to logout on server:', err)
+      })
+    }
     localStorage.removeItem('veolms_token')
     localStorage.removeItem('veolms_user')
     setToken(null)
